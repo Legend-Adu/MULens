@@ -1,0 +1,3168 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MULens — Where Moments Become Memories</title>
+  
+  <!-- Google Fonts (Plus Jakarta Sans & Cormorant Garamond & Playfair Display) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <!-- Bootstrap 5.3 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  
+  <!-- AOS (Animate On Scroll) CSS -->
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="/src/css/style.css">
+</head>
+<body>
+
+  <!-- Top Scroll Progress Indicator -->
+  <div id="scroll-progress"></div>
+
+
+
+  <!-- Floating Back To Top Button -->
+  <button id="back-to-top" title="Back to top" aria-label="Back to top">
+    <i class="bi bi-arrow-up-short"></i>
+  </button>
+
+  <!-- Notification Toast Container -->
+  <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+
+  <!-- Premium Floating Glassmorphism Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-custom">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#hero">
+        <div class="brand-icon-wrapper">
+          <i class="bi bi-camera2"></i>
+        </div>
+        <span><span class="brand-m">M</span><span class="brand-u">U</span><span class="brand-lens">Lens</span></span>
+      </a>
+
+      <div class="d-flex align-items-center gap-2 d-lg-none">
+        <button class="theme-toggle-btn me-1" id="theme-toggle-mobile" aria-label="Toggle dark mode">
+          <i class="bi bi-moon-stars-fill"></i>
+        </button>
+        <button class="navbar-toggler text-white border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
+          <i class="bi bi-list fs-1 text-white"></i>
+        </button>
+      </div>
+
+      <!-- Desktop Navbar Items -->
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav mx-auto nav-pills-wrapper">
+          <li class="nav-item"><a class="nav-link active" href="#hero"><i class="bi bi-house-door-fill me-1 nav-icon"></i>Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="#featured-memories"><i class="bi bi-images me-1 nav-icon"></i>Gallery</a></li>
+          <li class="nav-item"><a class="nav-link" href="#photo-of-the-week"><i class="bi bi-award-fill me-1 nav-icon"></i>Spotlight</a></li>
+          <li class="nav-item"><a class="nav-link" href="#upcoming-events"><i class="bi bi-calendar-event-fill me-1 nav-icon"></i>Events</a></li>
+          <li class="nav-item"><a class="nav-link text-warning fw-bold d-none" id="nav-admin-link" href="#admin"><i class="bi bi-shield-lock-fill me-1 nav-icon"></i>Admin Panel</a></li>
+        </ul>
+
+        <div class="d-flex align-items-center gap-3">
+          <button class="theme-toggle-btn" id="theme-toggle" title="Toggle Light/Dark Theme" aria-label="Toggle theme">
+            <i class="bi bi-moon-stars-fill"></i>
+          </button>
+          
+          <!-- Dynamic Auth Area: Logged Out vs Logged In Avatar Dropdown -->
+          <div id="nav-auth-buttons" class="d-flex align-items-center gap-2">
+            <!-- Dynamically populated by JS based on Auth State -->
+            <button class="btn btn-nav-signin btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">
+              <i class="bi bi-box-arrow-in-right me-1"></i> Sign In / Register
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Mobile Offcanvas Menu -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+    <div class="offcanvas-header border-bottom">
+      <h5 class="offcanvas-title font-heading" id="offcanvasNavbarLabel">
+        <span class="brand-m">M</span><span class="brand-u">U</span><span class="brand-lens">Lens</span>
+      </h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+      <ul class="navbar-nav justify-content-end flex-grow-1 pe-3 mb-4">
+        <li class="nav-item"><a class="nav-link text-dark" href="#hero" data-bs-dismiss="offcanvas">Home</a></li>
+        <li class="nav-item"><a class="nav-link text-dark" href="#featured-memories" data-bs-dismiss="offcanvas">Gallery</a></li>
+        <li class="nav-item"><a class="nav-link text-dark" href="#photo-of-the-week" data-bs-dismiss="offcanvas">Spotlight</a></li>
+        <li class="nav-item"><a class="nav-link text-dark" href="#upcoming-events" data-bs-dismiss="offcanvas">Events</a></li>
+        <li class="nav-item"><a class="nav-link text-warning fw-bold d-none" id="mobile-admin-link" href="#admin" data-bs-dismiss="offcanvas"><i class="bi bi-shield-lock-fill me-1"></i>Admin Panel</a></li>
+      </ul>
+      <a href="#featured-memories" class="btn btn-gradient w-100 mb-3" data-bs-dismiss="offcanvas">
+        <i class="bi bi-camera"></i> View Campus Memories
+      </a>
+      <div id="mobile-auth-container" class="pt-3 border-top">
+        <!-- Dynamically rendered mobile auth item -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       HOME PAGE VIEW (#page-home)
+       ========================================== -->
+  <div id="page-home" class="page-view">
+    <!-- Full-Bleed Immersive Hero Section with Ambient Photography Slider -->
+    <section id="hero" class="hero-section text-center">
+      <!-- High-Res Photography Background Crossfade Slider -->
+      <div class="hero-bg-slider">
+        <div class="hero-bg-slide active" style="background-image: url('https://i.imgur.com/Ic8TgWx.jpeg');"></div>
+        <div class="hero-bg-slide" style="background-image: url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1920&auto=format&fit=crop');"></div>
+        <div class="hero-bg-slide" style="background-image: url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1920&auto=format&fit=crop');"></div>
+        <div class="hero-bg-slide" style="background-image: url('https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?q=80&w=1920&auto=format&fit=crop');"></div>
+      </div>
+      <!-- Dramatic Vignette Gradient Overlay -->
+      <div class="hero-overlay"></div>
+
+      <div class="container hero-content position-relative" data-aos="fade-up">
+        <div class="hero-badge">
+          <i class="bi bi-stars"></i> MU Media Archive
+        </div>
+        <h1 class="hero-title">Where Moments Become <span class="text-gradient">Memories</span></h1>
+        <p class="hero-subtitle">
+          Discover, share, and preserve the vibrant moments that define university life through the eyes of student photographers and storytellers.
+        </p>
+
+        <!-- Minimalist Floating Semi-Transparent Search Bar -->
+        <div class="hero-floating-searchbar text-start mb-4 mx-auto" data-aos="zoom-in" data-aos-delay="200">
+          <form class="d-flex flex-column flex-md-row align-items-center gap-2 p-2">
+            <div class="search-field-wrapper flex-grow-1 w-100 d-flex align-items-center gap-2 px-3 py-2">
+              <i class="bi bi-search text-cyan fs-5"></i>
+              <input type="text" id="hero-search-input" class="hero-search-input w-100" placeholder="Search memories, locations, or photographers..." aria-label="Search campus memories">
+            </div>
+            
+            <div class="search-divider d-none d-md-block"></div>
+
+            <div class="search-field-wrapper d-flex align-items-center gap-2 px-3 py-2 w-100 w-md-auto">
+              <i class="bi bi-funnel-fill text-cyan"></i>
+              <select id="search-event" class="hero-search-select" aria-label="Select Category">
+                <option value="">All Categories</option>
+                <option value="graduation">Graduation</option>
+                <option value="sports">Sports</option>
+                <option value="university_events">University events</option>
+                <option value="rain">Monsoon</option>
+              </select>
+            </div>
+
+            <button type="submit" id="hero-search-btn" class="btn btn-gradient px-4 py-2 text-nowrap w-100 w-md-auto">
+              <i class="bi bi-arrow-right-short fs-4"></i> Search
+            </button>
+          </form>
+
+          <!-- Quick Category Tags Floating Pills -->
+          <div class="hero-quick-tags d-flex align-items-center justify-content-center gap-2 flex-wrap pt-2 pb-1 px-3 border-top border-white-10">
+            <span class="text-white-50 extra-small font-heading me-1"><i class="bi bi-fire text-warning me-1"></i>Trending:</span>
+            <button type="button" class="quick-tag-btn" data-tag="graduation">#Graduation2026</button>
+            <button type="button" class="quick-tag-btn" data-tag="sports">#VarsityChampionship</button>
+            <button type="button" class="quick-tag-btn" data-tag="university_events">#UniversityEvents</button>
+            <button type="button" class="quick-tag-btn" data-tag="rain">#MonsoonRain</button>
+          </div>
+        </div>
+
+        <!-- Hero Action Links -->
+        <div class="d-flex align-items-center justify-content-center gap-3 flex-wrap">
+          <a href="#featured-memories" class="btn btn-gradient">
+            <i class="bi bi-grid-3x3-gap-fill me-1"></i> Explore Gallery
+          </a>
+          <button type="button" class="btn btn-glass submit-memories-btn-trigger" id="hero-submit-memories-btn">
+            <i class="bi bi-cloud-upload-fill me-1"></i> Submit Memories
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Featured Statistics Section -->
+    <section class="stats-section">
+      <div class="container max-w-7xl">
+        <div class="row g-4">
+          <div class="col-6 col-md-3" data-aos="fade-up" data-aos-delay="100">
+            <div class="glass-panel stat-card glass-panel-hover">
+              <div class="stat-icon-box">
+                <i class="bi bi-camera"></i>
+              </div>
+              <div class="stat-number" id="stat-count-photos" data-suffix="+">0</div>
+              <div class="stat-label">Campus Photos</div>
+            </div>
+          </div>
+
+          <div class="col-6 col-md-3" data-aos="fade-up" data-aos-delay="200">
+            <div class="glass-panel stat-card glass-panel-hover">
+              <div class="stat-icon-box">
+                <i class="bi bi-play-btn"></i>
+              </div>
+              <div class="stat-number" id="stat-count-videos" data-suffix="+">0</div>
+              <div class="stat-label">Video Stories</div>
+            </div>
+          </div>
+
+          <div class="col-6 col-md-3" data-aos="fade-up" data-aos-delay="300">
+            <div class="glass-panel stat-card glass-panel-hover">
+              <div class="stat-icon-box">
+                <i class="bi bi-calendar2-check"></i>
+              </div>
+              <div class="stat-number" id="stat-count-events" data-suffix="+">0</div>
+              <div class="stat-label">Events Covered</div>
+            </div>
+          </div>
+
+          <div class="col-6 col-md-3" data-aos="fade-up" data-aos-delay="400">
+            <div class="glass-panel stat-card glass-panel-hover">
+              <div class="stat-icon-box">
+                <i class="bi bi-people"></i>
+              </div>
+              <div class="stat-number" id="stat-count-contributors" data-suffix="+">0</div>
+              <div class="stat-label">Contributors</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Featured Memories Section (Pinterest / Unsplash Dynamic Masonry Layout) -->
+    <section id="featured-memories" class="section-padding">
+      <div class="container max-w-7xl">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4" data-aos="fade-up">
+          <div class="section-header text-md-start mb-0">
+            <div class="section-subtitle-pill">
+              <i class="bi bi-images"></i> Campus Gallery
+            </div>
+            <h2 class="section-title">Featured Campus Memories</h2>
+            <p class="section-description mb-0">
+              Handpicked moments captured by student photojournalists highlighting the soul, energy, and traditions of our university campus.
+            </p>
+          </div>
+          <div class="text-nowrap text-md-end">
+            <button type="button" class="btn btn-gradient px-4 py-2 submit-memories-btn-trigger" id="gallery-upload-photo-btn">
+              <i class="bi bi-plus-circle-fill me-2"></i> Upload Photo / Memory
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Category Nav -->
+        <div class="filter-nav mb-5" data-aos="fade-up" data-aos-delay="100">
+          <button class="filter-btn active" data-filter="all">All Memories</button>
+          <button class="filter-btn" data-filter="CSE">CSE Department</button>
+          <button class="filter-btn" data-filter="eee">EEE Department</button>
+          <button class="filter-btn" data-filter="law">Law Department</button>
+          <button class="filter-btn" data-filter="bba">BBA Department</button>
+          <button class="filter-btn" data-filter="english">English Department</button>
+          <button class="filter-btn" data-filter="university_events">University events</button>
+          <button class="filter-btn" data-filter="campus">Campus Life</button>
+        </div>
+
+        <!-- Dynamic Pinterest-Style Masonry Grid -->
+        <div class="gallery-masonry-grid" id="gallery-masonry-grid">
+
+          <!-- Memory Card 1 (Portrait 4:5) -->
+          <div class="memory-item" data-category="graduation" data-tag="graduation" data-aos="fade-up" data-aos-delay="100">
+            <div class="memory-card memory-card-trigger ratio-portrait-4-5"
+                 data-title="Class of '26 Convocation Triumph"
+                 data-img="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=1200&auto=format&fit=crop"
+                 data-author="Elena Rostova '26"
+                 data-location="Grand Auditorium Quad"
+                 data-date="May 12, 2026"
+                 data-tag="Graduation">
+              <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=1200&auto=format&fit=crop" alt="Graduation Ceremony" class="memory-img" loading="lazy">
+              
+              <!-- Minimalist Dark Gradient Hover Overlay -->
+              <div class="memory-hover-overlay">
+                <div class="hover-top-bar d-flex justify-content-between align-items-center">
+                  <span class="hover-category-badge"><i class="bi bi-mortarboard-fill me-1"></i>Graduation</span>
+                  <button class="memory-like-btn like-btn-trigger" aria-label="Like photo">
+                    <i class="bi bi-heart"></i>
+                  </button>
+                </div>
+                <div class="hover-bottom-info">
+                  <h3 class="hover-photo-title">Class of '26 Convocation Triumph</h3>
+                  <div class="hover-meta-row d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                      <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop" alt="Elena Rostova" class="author-avatar">
+                      <div>
+                        <div class="author-name">Elena Rostova '26</div>
+                        <div class="photo-location"><i class="bi bi-geo-alt-fill text-cyan me-1"></i>Grand Quad</div>
+                      </div>
+                    </div>
+                    <div class="photo-likes-pill">
+                      <i class="bi bi-heart-fill text-danger me-1"></i><span class="like-count">342</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Memory Card 2 (Landscape 16:9) -->
+          <div class="memory-item" data-category="sports" data-tag="sports" data-aos="fade-up" data-aos-delay="150">
+            <div class="memory-card memory-card-trigger ratio-landscape-16-9"
+                 data-title="Varsity Basketball Semi-Final Win"
+                 data-img="https://images.unsplash.com/photo-1461896836934-ffe607ba8211?q=80&w=1200&auto=format&fit=crop"
+                 data-author="Marcus Vance '25"
+                 data-location="University Arena"
+                 data-date="Apr 28, 2026"
+                 data-tag="Sports">
+              <img src="https://images.unsplash.com/photo-1461896836934-ffe607ba8211?q=80&w=1200&auto=format&fit=crop" alt="Varsity Sports" class="memory-img" loading="lazy">
+              
+              <div class="memory-hover-overlay">
+                <div class="hover-top-bar d-flex justify-content-between align-items-center">
+                  <span class="hover-category-badge"><i class="bi bi-trophy-fill me-1"></i>Sports</span>
+                  <button class="memory-like-btn like-btn-trigger" aria-label="Like photo">
+                    <i class="bi bi-heart"></i>
+                  </button>
+                </div>
+                <div class="hover-bottom-info">
+                  <h3 class="hover-photo-title">Varsity Basketball Semi-Final Thriller</h3>
+                  <div class="hover-meta-row d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                      <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop" alt="Marcus Vance" class="author-avatar">
+                      <div>
+                        <div class="author-name">Marcus Vance '25</div>
+                        <div class="photo-location"><i class="bi bi-geo-alt-fill text-cyan me-1"></i>Sports Arena</div>
+                      </div>
+                    </div>
+                    <div class="photo-likes-pill">
+                      <i class="bi bi-heart-fill text-danger me-1"></i><span class="like-count">518</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Memory Card 3 (Tall Portrait 3:4) -->
+          <div class="memory-item" data-category="university_events" data-tag="university_events" data-aos="fade-up" data-aos-delay="200">
+            <div class="memory-card memory-card-trigger ratio-portrait-3-4"
+                 data-title="Spring Symphony Concert Night"
+                 data-img="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=1200&auto=format&fit=crop"
+                 data-author="Sarah Chen '27"
+                 data-location="Open Air Amphitheatre"
+                 data-date="Apr 15, 2026"
+                 data-tag="University events">
+              <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=1200&auto=format&fit=crop" alt="Symphony Concert" class="memory-img" loading="lazy">
+              
+              <div class="memory-hover-overlay">
+                <div class="hover-top-bar d-flex justify-content-between align-items-center">
+                  <span class="hover-category-badge"><i class="bi bi-calendar-event me-1"></i>University events</span>
+                  <button class="memory-like-btn like-btn-trigger" aria-label="Like photo">
+                    <i class="bi bi-heart"></i>
+                  </button>
+                </div>
+                <div class="hover-bottom-info">
+                  <h3 class="hover-photo-title">Spring Symphony Under The Stars</h3>
+                  <div class="hover-meta-row d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                      <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop" alt="Sarah Chen" class="author-avatar">
+                      <div>
+                        <div class="author-name">Sarah Chen '27</div>
+                        <div class="photo-location"><i class="bi bi-geo-alt-fill text-cyan me-1"></i>Amphitheatre</div>
+                      </div>
+                    </div>
+                    <div class="photo-likes-pill">
+                      <i class="bi bi-heart-fill text-danger me-1"></i><span class="like-count">621</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Memory Card 4 (Portrait 4:5) -->
+          <div class="memory-item" data-category="rain" data-tag="rain" data-aos="fade-up" data-aos-delay="250">
+            <div class="memory-card memory-card-trigger ratio-portrait-4-5"
+                 data-title="Monsoon Reflection at Heritage Arch"
+                 data-img="https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?q=80&w=1200&auto=format&fit=crop"
+                 data-author="David Kim '26"
+                 data-location="North Quad Walkway"
+                 data-date="Mar 30, 2026"
+                 data-tag="Rain">
+              <img src="https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?q=80&w=1200&auto=format&fit=crop" alt="Rainy Campus" class="memory-img" loading="lazy">
+              
+              <div class="memory-hover-overlay">
+                <div class="hover-top-bar d-flex justify-content-between align-items-center">
+                  <span class="hover-category-badge"><i class="bi bi-cloud-rain-fill me-1"></i>Monsoon</span>
+                  <button class="memory-like-btn like-btn-trigger" aria-label="Like photo">
+                    <i class="bi bi-heart"></i>
+                  </button>
+                </div>
+                <div class="hover-bottom-info">
+                  <h3 class="hover-photo-title">Monsoon Reflection at Heritage Arch</h3>
+                  <div class="hover-meta-row d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                      <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop" alt="David Kim" class="author-avatar">
+                      <div>
+                        <div class="author-name">David Kim '26</div>
+                        <div class="photo-location"><i class="bi bi-geo-alt-fill text-cyan me-1"></i>North Walkway</div>
+                      </div>
+                    </div>
+                    <div class="photo-likes-pill">
+                      <i class="bi bi-heart-fill text-danger me-1"></i><span class="like-count">289</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Memory Card 5 (Landscape 16:9) -->
+          <div class="memory-item" data-category="graduation" data-tag="graduation" data-aos="fade-up" data-aos-delay="300">
+            <div class="memory-card memory-card-trigger ratio-landscape-16-9"
+                 data-title="Library Gothic Arches at Dusk"
+                 data-img="https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=1200&auto=format&fit=crop"
+                 data-author="Elena Rostova '26"
+                 data-location="Central Library"
+                 data-date="Mar 18, 2026"
+                 data-tag="Architecture">
+              <img src="https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=1200&auto=format&fit=crop" alt="Library Building" class="memory-img" loading="lazy">
+              
+              <div class="memory-hover-overlay">
+                <div class="hover-top-bar d-flex justify-content-between align-items-center">
+                  <span class="hover-category-badge"><i class="bi bi-building-fill me-1"></i>Architecture</span>
+                  <button class="memory-like-btn like-btn-trigger" aria-label="Like photo">
+                    <i class="bi bi-heart"></i>
+                  </button>
+                </div>
+                <div class="hover-bottom-info">
+                  <h3 class="hover-photo-title">Central Library Gothic Glow at Dusk</h3>
+                  <div class="hover-meta-row d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                      <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop" alt="Elena Rostova" class="author-avatar">
+                      <div>
+                        <div class="author-name">Elena Rostova '26</div>
+                        <div class="photo-location"><i class="bi bi-geo-alt-fill text-cyan me-1"></i>Main Library</div>
+                      </div>
+                    </div>
+                    <div class="photo-likes-pill">
+                      <i class="bi bi-heart-fill text-danger me-1"></i><span class="like-count">475</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Memory Card 6 (Tall Portrait 3:4) -->
+          <div class="memory-item" data-category="festivals" data-tag="campus" data-aos="fade-up" data-aos-delay="350">
+            <div class="memory-card memory-card-trigger ratio-portrait-3-4"
+                 data-title="Student Hub Group Study & Laughter"
+                 data-img="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1200&auto=format&fit=crop"
+                 data-author="Sarah Chen '27"
+                 data-location="Student Union Plaza"
+                 data-date="Mar 05, 2026"
+                 data-tag="Campus Life">
+              <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1200&auto=format&fit=crop" alt="Campus Life" class="memory-img" loading="lazy">
+              
+              <div class="memory-hover-overlay">
+                <div class="hover-top-bar d-flex justify-content-between align-items-center">
+                  <span class="hover-category-badge"><i class="bi bi-people-fill me-1"></i>Campus Life</span>
+                  <button class="memory-like-btn like-btn-trigger" aria-label="Like photo">
+                    <i class="bi bi-heart"></i>
+                  </button>
+                </div>
+                <div class="hover-bottom-info">
+                  <h3 class="hover-photo-title">Student Hub Group Study & Laughter</h3>
+                  <div class="hover-meta-row d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                      <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop" alt="Sarah Chen" class="author-avatar">
+                      <div>
+                        <div class="author-name">Sarah Chen '27</div>
+                        <div class="photo-location"><i class="bi bi-geo-alt-fill text-cyan me-1"></i>Student Plaza</div>
+                      </div>
+                    </div>
+                    <div class="photo-likes-pill">
+                      <i class="bi bi-heart-fill text-danger me-1"></i><span class="like-count">390</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Memory Card 7 (Portrait 4:5) -->
+          <div class="memory-item" data-category="university_events" data-tag="university_events" data-aos="fade-up" data-aos-delay="400">
+            <div class="memory-card memory-card-trigger ratio-portrait-4-5"
+                 data-title="Golden Hour Reflection over Quad Lawn"
+                 data-img="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1200&auto=format&fit=crop"
+                 data-author="Alex Rivera '27"
+                 data-location="North Quad Plaza"
+                 data-date="Feb 24, 2026"
+                 data-tag="Sunset">
+              <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1200&auto=format&fit=crop" alt="Sunset Quad" class="memory-img" loading="lazy">
+              
+              <div class="memory-hover-overlay">
+                <div class="hover-top-bar d-flex justify-content-between align-items-center">
+                  <span class="hover-category-badge"><i class="bi bi-sundial-fill me-1"></i>Golden Hour</span>
+                  <button class="memory-like-btn like-btn-trigger" aria-label="Like photo">
+                    <i class="bi bi-heart"></i>
+                  </button>
+                </div>
+                <div class="hover-bottom-info">
+                  <h3 class="hover-photo-title">Golden Hour Reflection over Quad Lawn</h3>
+                  <div class="hover-meta-row d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                      <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=200&auto=format&fit=crop" alt="Alex Rivera" class="author-avatar">
+                      <div>
+                        <div class="author-name">Alex Rivera '27</div>
+                        <div class="photo-location"><i class="bi bi-geo-alt-fill text-cyan me-1"></i>North Quad</div>
+                      </div>
+                    </div>
+                    <div class="photo-likes-pill">
+                      <i class="bi bi-heart-fill text-danger me-1"></i><span class="like-count">712</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Memory Card 8 (Landscape 16:9) -->
+          <div class="memory-item" data-category="university_events" data-tag="university_events" data-aos="fade-up" data-aos-delay="450">
+            <div class="memory-card memory-card-trigger ratio-landscape-16-9"
+                 data-title="Annual Cultural Night Concert Light Show"
+                 data-img="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1200&auto=format&fit=crop"
+                 data-author="Sarah Chen '27"
+                 data-location="Main Auditorium Grounds"
+                 data-date="Feb 10, 2026"
+                 data-tag="University events">
+              <img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1200&auto=format&fit=crop" alt="Cultural Lightshow" class="memory-img" loading="lazy">
+              
+              <div class="memory-hover-overlay">
+                <div class="hover-top-bar d-flex justify-content-between align-items-center">
+                  <span class="hover-category-badge"><i class="bi bi-stars me-1"></i>Concert</span>
+                  <button class="memory-like-btn like-btn-trigger" aria-label="Like photo">
+                    <i class="bi bi-heart"></i>
+                  </button>
+                </div>
+                <div class="hover-bottom-info">
+                  <h3 class="hover-photo-title">Annual Cultural Night Concert Light Show</h3>
+                  <div class="hover-meta-row d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                      <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop" alt="Sarah Chen" class="author-avatar">
+                      <div>
+                        <div class="author-name">Sarah Chen '27</div>
+                        <div class="photo-location"><i class="bi bi-geo-alt-fill text-cyan me-1"></i>Auditorium</div>
+                      </div>
+                    </div>
+                    <div class="photo-likes-pill">
+                      <i class="bi bi-heart-fill text-danger me-1"></i><span class="like-count">830</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  <!-- Photo of the Week Section (Spotlight) -->
+  <section id="photo-of-the-week" class="section-padding">
+    <div class="container max-w-7xl">
+      <div class="section-header" data-aos="fade-up">
+        <div class="section-subtitle-pill text-warning" style="background: rgba(245, 158, 11, 0.1);">
+          <i class="bi bi-trophy-fill"></i> Weekly Spotlight
+        </div>
+        <h2 class="section-title">Photo Of The Week</h2>
+        <p class="section-description">
+          Each week, our editorial committee selects one exemplary frame that demonstrates artistic depth and storytelling excellence.
+        </p>
+      </div>
+
+      <div class="glass-panel potw-card" data-aos="zoom-in" id="potw-card-container">
+        <div class="row g-0 align-items-center">
+          <div class="col-lg-7">
+            <div class="potw-img-wrapper">
+              <span class="potw-badge"><i class="bi bi-award-fill"></i> Winner • Week 18</span>
+              <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop" alt="Sunset Quad" class="potw-img" loading="lazy">
+            </div>
+          </div>
+          <div class="col-lg-5 p-4 p-lg-5">
+            <div class="d-flex align-items-center gap-2 mb-3 text-muted small">
+              <span><i class="bi bi-geo-alt-fill text-danger"></i> North Quad Plaza</span>
+              <span>•</span>
+              <span><i class="bi bi-clock"></i> Golden Hour</span>
+            </div>
+            <h3 class="font-heading fs-2 mb-3">Golden Hour Over Central Quadrangle</h3>
+            <p class="text-muted mb-4">
+              "Captured during the final evening of Spring 2026 graduation week. The warm sunlight piercing through the gothic arches created a surreal moment of nostalgia, achievement, and quiet reflection."
+            </p>
+
+            <!-- Camera Tech Specs -->
+            <div class="bg-body-secondary p-3 rounded-3 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2 text-muted extra-small">
+              <span><i class="bi bi-camera"></i> Sony A7 IV</span>
+              <span><i class="bi bi-disc"></i> 35mm f/1.4</span>
+              <span><i class="bi bi-speedometer2"></i> 1/500s</span>
+              <span><i class="bi bi-sun"></i> ISO 100</span>
+            </div>
+
+            <!-- Author info & Actions -->
+            <div class="d-flex align-items-center justify-content-between pt-3 border-top">
+              <div class="d-flex align-items-center gap-3">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop" alt="Elena Rostova" class="author-avatar" style="width: 46px; height: 46px;">
+                <div>
+                  <div class="fw-bold">Elena Rostova '26</div>
+                  <div class="text-muted small">Senior Photojournalism Fellow</div>
+                </div>
+              </div>
+
+              <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-outline-danger btn-sm rounded-circle p-2 like-btn-trigger" aria-label="Like" title="Like photo">
+                  <i class="bi bi-heart fs-6"></i>
+                </button>
+                <button class="btn btn-outline-primary btn-sm rounded-circle p-2" title="Share Photo" onclick="sharePOTW()" aria-label="Share">
+                  <i class="bi bi-share-fill fs-6"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Upcoming Events Timeline Section -->
+  <section id="upcoming-events" class="section-padding bg-body-tertiary">
+    <div class="container max-w-7xl">
+      <div class="section-header" data-aos="fade-up">
+        <div class="section-subtitle-pill">
+          <i class="bi bi-calendar-event-fill"></i> Campus Schedule
+        </div>
+        <h2 class="section-title">Upcoming Campus Events</h2>
+        <p class="section-description">
+          Join upcoming media workshops, photo exhibitions, and press coverage assignments across campus.
+        </p>
+      </div>
+
+      <div class="row g-4">
+        <!-- Event 1 -->
+        <div class="col-md-6" data-aos="fade-up" data-aos-delay="100">
+          <div class="glass-panel event-timeline-card glass-panel-hover">
+            <div class="d-flex align-items-start gap-3">
+              <div class="event-date-box">
+                <div class="event-date-day">15</div>
+                <div class="event-date-month">MAY</div>
+              </div>
+              <div class="flex-grow-1">
+                <div class="badge bg-primary-subtle text-primary mb-2">University events</div>
+                <h3 class="fs-5 fw-bold mb-1">Annual Cultural Fest '26 Coverage</h3>
+                <p class="text-muted small mb-3"><i class="bi bi-geo-alt"></i> Main Auditorium & Central Lawns</p>
+                <div class="d-flex align-items-center justify-content-between">
+                  <span class="text-muted extra-small"><i class="bi bi-people-fill text-success"></i> 420 Photographers Registered</span>
+                  <button class="btn btn-gradient btn-sm rsvp-trigger" data-event="Annual Cultural Fest '26" data-bs-toggle="modal" data-bs-target="#rsvpModal">
+                    Get Media Pass
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Event 2 -->
+        <div class="col-md-6" data-aos="fade-up" data-aos-delay="200">
+          <div class="glass-panel event-timeline-card glass-panel-hover" style="border-left-color: #06B6D4;">
+            <div class="d-flex align-items-start gap-3">
+              <div class="event-date-box" style="background: linear-gradient(135deg, #06B6D4, #2563EB);">
+                <div class="event-date-day">22</div>
+                <div class="event-date-month">MAY</div>
+              </div>
+              <div class="flex-grow-1">
+                <div class="badge bg-info-subtle text-info mb-2">Sports</div>
+                <h3 class="fs-5 fw-bold mb-1">Inter-University Athletics Finals</h3>
+                <p class="text-muted small mb-3"><i class="bi bi-geo-alt"></i> University Sports Stadium</p>
+                <div class="d-flex align-items-center justify-content-between">
+                  <span class="text-muted extra-small"><i class="bi bi-people-fill text-success"></i> 280 Photographers Registered</span>
+                  <button class="btn btn-gradient btn-sm rsvp-trigger" data-event="Inter-University Athletics Finals" data-bs-toggle="modal" data-bs-target="#rsvpModal">
+                    Get Media Pass
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Event 3 -->
+        <div class="col-md-6" data-aos="fade-up" data-aos-delay="300">
+          <div class="glass-panel event-timeline-card glass-panel-hover" style="border-left-color: #F59E0B;">
+            <div class="d-flex align-items-start gap-3">
+              <div class="event-date-box" style="background: var(--gradient-gold);">
+                <div class="event-date-day">01</div>
+                <div class="event-date-month">JUN</div>
+              </div>
+              <div class="flex-grow-1">
+                <div class="badge bg-warning-subtle text-warning mb-2">Workshop</div>
+                <h3 class="fs-5 fw-bold mb-1">Night & Astrophotography Masterclass</h3>
+                <p class="text-muted small mb-3"><i class="bi bi-geo-alt"></i> Media Arts Lab & Observatory</p>
+                <div class="d-flex align-items-center justify-content-between">
+                  <span class="text-muted extra-small"><i class="bi bi-people-fill text-success"></i> 95 Seats Left</span>
+                  <button class="btn btn-gradient btn-sm rsvp-trigger" data-event="Night & Astrophotography Masterclass" data-bs-toggle="modal" data-bs-target="#rsvpModal">
+                    RSVP Workshop
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Event 4 -->
+        <div class="col-md-6" data-aos="fade-up" data-aos-delay="400">
+          <div class="glass-panel event-timeline-card glass-panel-hover">
+            <div class="d-flex align-items-start gap-3">
+              <div class="event-date-box">
+                <div class="event-date-day">10</div>
+                <div class="event-date-month">JUN</div>
+              </div>
+              <div class="flex-grow-1">
+                <div class="badge bg-primary-subtle text-primary mb-2">Alumni</div>
+                <h3 class="fs-5 fw-bold mb-1">Alumni Homecoming & Photo Gala</h3>
+                <p class="text-muted small mb-3"><i class="bi bi-geo-alt"></i> Heritage Quadrangle Hall</p>
+                <div class="d-flex align-items-center justify-content-between">
+                  <span class="text-muted extra-small"><i class="bi bi-people-fill text-success"></i> 310 Confirmed Attendees</span>
+                  <button class="btn btn-gradient btn-sm rsvp-trigger" data-event="Alumni Homecoming & Photo Gala" data-bs-toggle="modal" data-bs-target="#rsvpModal">
+                    Get Media Pass
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials Section -->
+  <section id="testimonials" class="section-padding">
+    <div class="container max-w-7xl">
+      <div class="section-header" data-aos="fade-up">
+        <div class="section-subtitle-pill">
+          <i class="bi bi-chat-quote-fill"></i> Community Voices
+        </div>
+        <h2 class="section-title">What Our Campus Says</h2>
+        <p class="section-description">
+          Hear how CampusLens empowers student creators, campus journalists, and alumni storytellers.
+        </p>
+      </div>
+
+      <div class="row g-4">
+        <!-- Testimonial 1 -->
+        <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+          <div class="glass-panel testimonial-card glass-panel-hover">
+            <div class="quote-icon"><i class="bi bi-quote"></i></div>
+            <div class="rating-stars mb-3">
+              <i class="bi bi-star-fill"></i>
+              <i class="bi bi-star-fill"></i>
+              <i class="bi bi-star-fill"></i>
+              <i class="bi bi-star-fill"></i>
+              <i class="bi bi-star-fill"></i>
+            </div>
+            <p class="text-muted mb-4 flex-grow-1">
+              "CampusLens gave my photojournalism portfolio national visibility. The high-res media archive allowed me to land a photo editor role right after graduation!"
+            </p>
+            <div class="d-flex align-items-center gap-3 pt-3 border-top">
+              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop" alt="Elena" class="author-avatar">
+              <div>
+                <div class="fw-bold small">Elena Rostova '26</div>
+                <div class="text-muted extra-small">Senior Photo Fellow</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Testimonial 2 -->
+        <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+          <div class="glass-panel testimonial-card glass-panel-hover">
+            <div class="quote-icon"><i class="bi bi-quote"></i></div>
+            <div class="rating-stars mb-3">
+              <i class="bi bi-star-fill"></i>
+              <i class="bi bi-star-fill"></i>
+              <i class="bi bi-star-fill"></i>
+              <i class="bi bi-star-fill"></i>
+              <i class="bi bi-star-fill"></i>
+            </div>
+            <p class="text-muted mb-4 flex-grow-1">
+              "As an event organizer, finding quality high-resolution event media used to be chaotic. CampusLens made instant press releases effortless."
+            </p>
+            <div class="d-flex align-items-center gap-3 pt-3 border-top">
+              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop" alt="Marcus" class="author-avatar">
+              <div>
+                <div class="fw-bold small">Marcus Vance '25</div>
+                <div class="text-muted extra-small">Sports Press Lead</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Testimonial 3 -->
+        <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+          <div class="glass-panel testimonial-card glass-panel-hover">
+            <div class="quote-icon"><i class="bi bi-quote"></i></div>
+            <div class="rating-stars mb-3">
+              <i class="bi bi-star-fill"></i>
+              <i class="bi bi-star-fill"></i>
+              <i class="bi bi-star-fill"></i>
+              <i class="bi bi-star-fill"></i>
+              <i class="bi bi-star-fill"></i>
+            </div>
+            <p class="text-muted mb-4 flex-grow-1">
+              "Whenever I get nostalgic about my university days, CampusLens brings back every memory in stunning clarity. Truly a priceless digital archive."
+            </p>
+            <div class="d-flex align-items-center gap-3 pt-3 border-top">
+              <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop" alt="Sarah" class="author-avatar">
+              <div>
+                <div class="fw-bold small">Sarah Chen '27</div>
+                <div class="text-muted extra-small">Cultural Reporter</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Premium Footer -->
+  <footer>
+    <div class="container max-w-7xl">
+      <div class="row g-4 mb-5">
+        <div class="col-lg-4">
+          <a class="navbar-brand text-white mb-3 d-inline-flex" href="#hero">
+            <div class="brand-icon-wrapper me-2">
+              <i class="bi bi-camera2"></i>
+            </div>
+            <span><span class="brand-m">M</span><span class="brand-u">U</span><span class="brand-lens">Lens</span></span>
+          </a>
+          <p class="text-muted small pe-lg-4 mb-4">
+            The official student media archive and photography platform preserving memories, sports triumphs, and campus traditions for generations.
+          </p>
+          <div class="d-flex align-items-center gap-2">
+            <a href="#" class="social-icon-btn" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+            <a href="#" class="social-icon-btn" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
+            <a href="#" class="social-icon-btn" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+            <a href="#" class="social-icon-btn" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
+          </div>
+        </div>
+
+        <div class="col-6 col-lg-2">
+          <h5>Quick Links</h5>
+          <ul class="list-unstyled">
+            <li><a href="#hero" class="footer-link">Home</a></li>
+            <li><a href="#featured-memories" class="footer-link">Gallery Archive</a></li>
+            <li><a href="#photo-of-the-week" class="footer-link">Spotlight Photo</a></li>
+            <li><a href="#upcoming-events" class="footer-link">Events Calendar</a></li>
+            <li><a href="#testimonials" class="footer-link">Student Stories</a></li>
+          </ul>
+        </div>
+
+        <div class="col-6 col-lg-3">
+          <h5>Collections</h5>
+          <ul class="list-unstyled">
+            <li><a href="#featured-memories" class="footer-link">Graduation Ceremonies</a></li>
+            <li><a href="#featured-memories" class="footer-link">Varsity Sports & Athletics</a></li>
+            <li><a href="#featured-memories" class="footer-link">Cultural & Music Fests</a></li>
+            <li><a href="#featured-memories" class="footer-link">Monsoon & Nature Photography</a></li>
+            <li><a href="#featured-memories" class="footer-link">Campus Heritage Architecture</a></li>
+          </ul>
+        </div>
+
+        <div class="col-lg-3">
+          <h5>Media Desk</h5>
+          <p class="text-muted small mb-2"><i class="bi bi-geo-alt-fill text-primary me-2"></i> Media Arts Center, Building B, Quadrangle Campus</p>
+          <p class="text-muted small mb-2"><i class="bi bi-envelope-fill text-primary me-2"></i> press@mulens.edu</p>
+          <p class="text-muted small mb-0"><i class="bi bi-telephone-fill text-primary me-2"></i> +1 (555) 234-5678</p>
+        </div>
+      </div>
+
+      <div class="pt-4 border-top border-secondary-subtle d-flex flex-column flex-md-row align-items-center justify-content-between text-muted small">
+        <p class="mb-2 mb-md-0">&copy; 2026 MULens. All rights reserved. Crafted for Student Photojournalists.</p>
+        <div class="d-flex align-items-center gap-3">
+          <a href="#" class="text-muted text-decoration-none">Privacy Policy</a>
+          <span>•</span>
+          <a href="#" class="text-muted text-decoration-none">Terms of Service</a>
+          <span>•</span>
+          <a href="#" class="text-muted text-decoration-none">Press Guidelines</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+  </div><!-- End #page-home -->
+
+  <!-- ==========================================
+       LOGIN PAGE VIEW (#page-login)
+       ========================================== -->
+  <div id="page-login" class="page-view d-none">
+    <div class="auth-page-wrapper">
+      <div class="container my-auto">
+        <div class="auth-card-container mx-auto">
+          <div class="row g-0">
+            <!-- Left Side: Campus Image & Brand Overlay -->
+            <div class="col-lg-5 d-none d-lg-block auth-banner-side">
+              <div class="auth-banner-content">
+                <a href="#home" class="d-inline-flex align-items-center text-white mb-4 text-decoration-none">
+                  <div class="brand-icon-wrapper me-2" style="width: 38px; height: 38px; font-size: 1.2rem;">
+                    <i class="bi bi-camera2"></i>
+                  </div>
+                  <span class="fs-4 font-heading fw-bold"><span class="brand-m">M</span><span class="brand-u">U</span><span class="text-white">Lens</span></span>
+                </a>
+                <h3 class="font-heading fw-bold text-white mb-3">Preserving University Memories</h3>
+                <p class="text-white-75 small leading-relaxed mb-4">
+                  Access the official student photojournalism archive, explore high-res sports captures, graduation moments, and campus traditions.
+                </p>
+                <div class="p-3 glass-panel rounded-3 text-white border-0 bg-opacity-25 mb-3" style="background: rgba(255,255,255,0.12);">
+                  <div class="extra-small fw-semibold text-warning mb-1"><i class="bi bi-quote fs-5"></i> SPOTLIGHT QUOTE</div>
+                  <p class="extra-small fst-italic mb-0">"Every picture tells a story that words can never capture."</p>
+                </div>
+              </div>
+              <div class="auth-banner-footer text-white-50 extra-small pt-3 border-top border-white-10">
+                &copy; 2026 MULens Campus Media Fellowship.
+              </div>
+            </div>
+
+            <!-- Right Side: Login Form -->
+            <div class="col-lg-7 auth-form-side">
+              <div class="d-flex align-items-center justify-content-between mb-4">
+                <div>
+                  <h3 class="font-heading fw-bold mb-1">Sign In to MULens</h3>
+                  <p class="text-muted small mb-0">Welcome back! Please enter your credentials.</p>
+                </div>
+                <a href="#home" class="btn btn-outline-secondary btn-sm rounded-pill"><i class="bi bi-house me-1"></i> Home</a>
+              </div>
+
+              <!-- Quick Demo Accounts -->
+              <div class="mb-4">
+                <label class="form-label extra-small text-muted text-uppercase fw-semibold tracking-wider">Quick Demo Login (1-Click)</label>
+                <div class="row g-2">
+                  <div class="col-6">
+                    <button type="button" class="demo-user-pill demo-login-btn w-100" data-email="alex.rivera@university.edu">
+                      <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=150&auto=format&fit=crop" class="rounded-circle" style="width: 28px; height: 28px; object-fit: cover;" alt="Alex">
+                      <div class="text-truncate text-start">
+                        <div class="fw-bold extra-small text-truncate">Alex Rivera</div>
+                        <div class="text-muted extra-small text-truncate" style="font-size: 0.7rem;">Photographer</div>
+                      </div>
+                    </button>
+                  </div>
+                  <div class="col-6">
+                    <button type="button" class="demo-user-pill demo-login-btn w-100" data-email="elena.rostova@university.edu">
+                      <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop" class="rounded-circle" style="width: 28px; height: 28px; object-fit: cover;" alt="Elena">
+                      <div class="text-truncate text-start">
+                        <div class="fw-bold extra-small text-truncate">Elena Rostova</div>
+                        <div class="text-muted extra-small text-truncate" style="font-size: 0.7rem;">Photo Fellow</div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="d-flex align-items-center my-3">
+                <hr class="flex-grow-1 border-secondary-subtle my-0">
+                <span class="px-3 extra-small text-muted text-uppercase fw-semibold">Or with email</span>
+                <hr class="flex-grow-1 border-secondary-subtle my-0">
+              </div>
+
+              <form id="standalone-login-form" novalidate>
+                <div class="auth-input-group mb-3">
+                  <input type="email" id="pageLoginEmail" class="form-control form-control-lg" placeholder="University Email (e.g. alex.rivera@university.edu)" required>
+                  <i class="bi bi-envelope auth-icon"></i>
+                  <div class="invalid-feedback extra-small">Please enter a valid university email address.</div>
+                </div>
+
+                <div class="auth-input-group mb-3">
+                  <input type="password" id="pageLoginPassword" class="form-control form-control-lg" placeholder="Password (min 6 characters)" required minlength="6">
+                  <i class="bi bi-lock auth-icon"></i>
+                  <button type="button" class="password-toggle-btn" title="Toggle Password Visibility">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                  <div class="invalid-feedback extra-small">Password must be at least 6 characters.</div>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="pageLoginRemember" checked>
+                    <label class="form-check-label extra-small text-muted" for="pageLoginRemember">Remember me on this device</label>
+                  </div>
+                  <a href="#forgot-password" class="extra-small text-primary text-decoration-none fw-semibold">Forgot Password?</a>
+                </div>
+
+                <button type="submit" class="btn btn-gradient w-100 py-3 fw-semibold fs-6 mb-3">
+                  <i class="bi bi-box-arrow-in-right me-2"></i> Sign In to Dashboard
+                </button>
+
+                <div class="row g-2 mb-3">
+                  <div class="col-6">
+                    <a href="#home" class="btn btn-outline-secondary w-100 btn-sm py-2">
+                      <i class="bi bi-person me-1"></i> Continue as Guest
+                    </a>
+                  </div>
+                  <div class="col-6">
+                    <button type="button" class="btn btn-outline-danger w-100 btn-sm py-2" onclick="showToast('Google Workspace Single-Sign-On initiated.', 'info')">
+                      <i class="bi bi-google me-1"></i> Google SSO
+                    </button>
+                  </div>
+                </div>
+
+                <div class="text-center pt-2">
+                  <span class="text-muted small">Don't have an account?</span>
+                  <a href="#register" class="text-primary fw-bold small text-decoration-none ms-1">Create an Account</a>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       REGISTER PAGE VIEW (#page-register)
+       ========================================== -->
+  <div id="page-register" class="page-view d-none">
+    <div class="auth-page-wrapper">
+      <div class="container my-auto">
+        <div class="auth-card-container mx-auto" style="max-width: 900px;">
+          <div class="auth-form-side p-4 p-md-5">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+              <div>
+                <a href="#home" class="d-inline-flex align-items-center text-dark text-decoration-none mb-2">
+                  <div class="brand-icon-wrapper me-2" style="width: 32px; height: 32px; font-size: 1rem;">
+                    <i class="bi bi-camera2"></i>
+                  </div>
+                  <span class="fs-5 font-heading fw-bold"><span class="brand-m">M</span><span class="brand-u">U</span><span class="brand-lens">Lens</span></span>
+                </a>
+                <h3 class="font-heading fw-bold mb-1">Create Media Account</h3>
+                <p class="text-muted small mb-0">Join the official university media archive & photo community.</p>
+              </div>
+              <a href="#login" class="btn btn-outline-primary btn-sm rounded-pill"><i class="bi bi-box-arrow-in-right me-1"></i> Sign In Instead</a>
+            </div>
+
+            <form id="standalone-register-form" novalidate>
+              <!-- Profile Picture Upload & Preview Row -->
+              <div class="p-3 bg-body-tertiary rounded-3 border mb-4">
+                <label class="form-label extra-small text-muted text-uppercase fw-semibold mb-2">Profile Picture Selection</label>
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                  <img id="avatar-preview-img" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=300&auto=format&fit=crop" class="avatar-upload-preview" alt="Preview">
+                  <div class="flex-grow-1">
+                    <input type="url" id="regAvatarUrl" class="form-control form-control-sm mb-2" placeholder="Image Direct Link URL (or select preset below)" value="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=300">
+                    <div class="d-flex gap-2 flex-wrap">
+                      <button type="button" class="btn btn-outline-secondary btn-xs reg-avatar-preset" data-url="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=300">👤 Male Photographer</button>
+                      <button type="button" class="btn btn-outline-secondary btn-xs reg-avatar-preset" data-url="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=300">👩 Female Fellow</button>
+                      <button type="button" class="btn btn-outline-secondary btn-xs reg-avatar-preset" data-url="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=300">👨 Student Creator</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label class="form-label small fw-semibold">Full Name *</label>
+                  <div class="auth-input-group">
+                    <input type="text" id="regFullName" class="form-control" placeholder="e.g. John Doe" required>
+                    <i class="bi bi-person auth-icon"></i>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small fw-semibold">Student ID *</label>
+                  <div class="auth-input-group">
+                    <input type="text" id="regStudentId" class="form-control" placeholder="e.g. STU-2026-8942" required>
+                    <i class="bi bi-card-heading auth-icon"></i>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small fw-semibold">Department *</label>
+                  <div class="auth-input-group">
+                    <input type="text" id="regDepartment" class="form-control" placeholder="e.g. Media & Communications" required>
+                    <i class="bi bi-building auth-icon"></i>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small fw-semibold">Batch / Class Year *</label>
+                  <div class="auth-input-group">
+                    <input type="text" id="regBatch" class="form-control" placeholder="e.g. 2026 - 2028" required>
+                    <i class="bi bi-mortarboard auth-icon"></i>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label small fw-semibold">University Email Address *</label>
+                  <div class="auth-input-group">
+                    <input type="email" id="regEmailAddress" class="form-control" placeholder="john.doe@university.edu" required>
+                    <i class="bi bi-envelope auth-icon"></i>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small fw-semibold">Password *</label>
+                  <div class="auth-input-group">
+                    <input type="password" id="regPasswordVal" class="form-control" placeholder="Min 6 characters" minlength="6" required>
+                    <i class="bi bi-lock auth-icon"></i>
+                    <button type="button" class="password-toggle-btn"><i class="bi bi-eye"></i></button>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small fw-semibold">Confirm Password *</label>
+                  <div class="auth-input-group">
+                    <input type="password" id="regConfirmPasswordVal" class="form-control" placeholder="Re-enter password" minlength="6" required>
+                    <i class="bi bi-shield-lock auth-icon"></i>
+                    <button type="button" class="password-toggle-btn"><i class="bi bi-eye"></i></button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-check mb-4">
+                <input class="form-check-input" type="checkbox" id="regAcceptTerms" required>
+                <label class="form-check-label small text-muted" for="regAcceptTerms">
+                  I accept the <a href="#" class="text-primary text-decoration-none">MULens Media Archive Terms</a> and Privacy Code.
+                </label>
+              </div>
+
+              <button type="submit" class="btn btn-gradient w-100 py-3 fw-semibold fs-6 mb-3">
+                <i class="bi bi-person-plus-fill me-2"></i> Create Account & Proceed
+              </button>
+
+              <div class="text-center">
+                <span class="text-muted small">Already have an account?</span>
+                <a href="#login" class="text-primary fw-bold small text-decoration-none ms-1">Sign In</a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       FORGOT PASSWORD PAGE VIEW (#page-forgot-password)
+       ========================================== -->
+  <div id="page-forgot-password" class="page-view d-none">
+    <div class="auth-page-wrapper">
+      <div class="container my-auto">
+        <div class="auth-card-container mx-auto" style="max-width: 520px;">
+          <div class="auth-form-side p-4 p-md-5 text-center">
+            <div class="brand-icon-wrapper mx-auto mb-3" style="width: 55px; height: 55px; font-size: 1.6rem;">
+              <i class="bi bi-key-fill"></i>
+            </div>
+            <h3 class="font-heading fw-bold mb-2">Reset Password</h3>
+            <p class="text-muted small mb-4">
+              Enter your registered university email address and we'll send you a password reset passcode.
+            </p>
+
+            <div id="forgot-pass-alert-box" class="alert alert-success d-none text-start extra-small shadow-sm" role="alert">
+              <i class="bi bi-check-circle-fill me-1"></i> <strong>Success!</strong> Password reset link has been sent to your email.
+            </div>
+
+            <form id="standalone-forgot-pass-form">
+              <div class="auth-input-group mb-4 text-start">
+                <input type="email" id="forgotPassEmailInput" class="form-control form-control-lg" placeholder="University Email (e.g. john@example.com)" required>
+                <i class="bi bi-envelope auth-icon"></i>
+              </div>
+
+              <button type="submit" class="btn btn-gradient w-100 py-3 fw-semibold fs-6 mb-3">
+                <i class="bi bi-send-fill me-2"></i> Send Reset Link
+              </button>
+
+              <div class="text-center">
+                <a href="#login" class="text-muted small text-decoration-none fw-semibold">
+                  <i class="bi bi-arrow-left me-1"></i> Back to Sign In
+                </a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       USER DASHBOARD PAGE VIEW (#page-dashboard)
+       ========================================== -->
+  <div id="page-dashboard" class="page-view d-none">
+    <div class="dashboard-wrapper">
+      <div class="container-fluid max-w-7xl px-lg-4 py-4">
+        <div class="row g-4">
+          <!-- Dashboard Sidebar Navigation -->
+          <div class="col-lg-3 col-xl-2">
+            <div class="dash-sidebar glass-panel p-3">
+              <!-- User Brief Card -->
+              <div class="p-3 bg-body-tertiary rounded-3 text-center mb-4 border">
+                <img id="dash-user-avatar" src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=300" class="rounded-circle mb-2" style="width: 64px; height: 64px; object-fit: cover; border: 2px solid var(--accent);" alt="User">
+                <h6 class="fw-bold mb-0 text-truncate" id="dash-user-name">Alex Rivera</h6>
+                <div class="text-muted extra-small text-truncate" id="dash-user-role">Student Photographer</div>
+                <span class="badge bg-success-subtle text-success extra-small mt-1"><i class="bi bi-check-circle-fill me-1"></i> Active Member</span>
+              </div>
+
+              <nav class="nav flex-column">
+                <a class="dash-nav-link active" href="#dashboard" data-dash-sec="overview">
+                  <i class="bi bi-grid-fill"></i> Dashboard
+                </a>
+                <a class="dash-nav-link" href="#dashboard" data-dash-sec="memories">
+                  <i class="bi bi-images"></i> My Memories
+                </a>
+                <a class="dash-nav-link" href="#dashboard" data-dash-sec="favorites">
+                  <i class="bi bi-heart-fill text-danger"></i> Favorites
+                </a>
+                <a class="dash-nav-link" href="#dashboard" data-dash-sec="albums">
+                  <i class="bi bi-journal-album text-info"></i> Saved Albums
+                </a>
+                <a class="dash-nav-link" href="#dashboard" data-dash-sec="events">
+                  <i class="bi bi-calendar-check-fill text-warning"></i> Events Joined
+                </a>
+                <a class="dash-nav-link" href="#profile">
+                  <i class="bi bi-person-circle"></i> Profile
+                </a>
+                <a class="dash-nav-link" href="#settings">
+                  <i class="bi bi-gear-fill"></i> Settings
+                </a>
+                <hr class="my-2 border-secondary-subtle">
+                <button class="dash-nav-link text-danger w-100 text-start bg-transparent border-0" id="dash-logout-btn">
+                  <i class="bi bi-box-arrow-right"></i> Logout
+                </button>
+              </nav>
+            </div>
+          </div>
+
+          <!-- Main Dashboard Content Area -->
+          <div class="col-lg-9 col-xl-10">
+            <!-- Top Dashboard Header Bar -->
+            <div class="glass-panel p-3 p-md-4 mb-4 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+              <div>
+                <h3 class="font-heading fw-bold mb-1" id="dash-welcome-heading">Welcome back, Alex!</h3>
+                <p class="text-muted small mb-0">Here is your campus photography activity summary and media statistics.</p>
+              </div>
+
+              <div class="d-flex align-items-center gap-3">
+                <!-- Search Input -->
+                <div class="input-group input-group-sm" style="max-width: 220px;">
+                  <span class="input-group-text bg-body-tertiary border-end-0"><i class="bi bi-search"></i></span>
+                  <input type="text" class="form-control bg-body-tertiary border-start-0" placeholder="Search archive...">
+                </div>
+
+                <!-- Notifications Dropdown -->
+                <div class="dropdown">
+                  <button class="notif-bell-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+                    <i class="bi bi-bell-fill"></i>
+                    <span class="notif-badge"></span>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end notif-dropdown-menu p-0">
+                    <li class="p-3 border-bottom d-flex align-items-center justify-content-between">
+                      <h6 class="fw-bold mb-0 small"><i class="bi bi-bell me-1"></i> Notifications</h6>
+                      <span class="badge bg-primary rounded-pill extra-small">3 New</span>
+                    </li>
+                    <li class="p-2 border-bottom">
+                      <a href="#" class="d-flex align-items-center gap-2 text-decoration-none text-dark p-2 rounded-2 hover-bg">
+                        <i class="bi bi-heart-fill text-danger fs-5"></i>
+                        <div class="extra-small">
+                          <div class="fw-bold">Elena liked your photo</div>
+                          <div class="text-muted">Golden Hour Over Quad • 10m ago</div>
+                        </div>
+                      </a>
+                    </li>
+                    <li class="p-2 border-bottom">
+                      <a href="#" class="d-flex align-items-center gap-2 text-decoration-none text-dark p-2 rounded-2 hover-bg">
+                        <i class="bi bi-award-fill text-warning fs-5"></i>
+                        <div class="extra-small">
+                          <div class="fw-bold">Spotlight Selection</div>
+                          <div class="text-muted">Your album was featured in Media Digest</div>
+                        </div>
+                      </a>
+                    </li>
+                    <li class="p-2 border-bottom">
+                      <a href="#" class="d-flex align-items-center gap-2 text-decoration-none text-dark p-2 rounded-2 hover-bg">
+                        <i class="bi bi-ticket-perforated-fill text-info fs-5"></i>
+                        <div class="extra-small">
+                          <div class="fw-bold">Media Pass Approved</div>
+                          <div class="text-muted">Spring Convocation 2026 Press Pass ready</div>
+                        </div>
+                      </a>
+                    </li>
+                    <li class="p-2 text-center">
+                      <a href="#" class="extra-small text-primary fw-bold text-decoration-none">Mark all as read</a>
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- User Quick Avatar -->
+                <a href="#profile" title="View Profile">
+                  <img id="dash-top-avatar" src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=300" class="rounded-circle" style="width: 42px; height: 42px; object-fit: cover; border: 2px solid var(--accent);" alt="Avatar">
+                </a>
+              </div>
+            </div>
+
+            <!-- Dashboard Metric Stat Cards -->
+            <div class="row g-3 mb-4">
+              <div class="col-6 col-md-3">
+                <div class="dash-stat-card">
+                  <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="extra-small text-muted fw-bold text-uppercase">Photos Viewed</span>
+                    <div class="stat-icon-wrapper bg-primary-subtle text-primary">
+                      <i class="bi bi-eye-fill"></i>
+                    </div>
+                  </div>
+                  <h3 class="fw-bold mb-0" id="dash-stat-viewed">142</h3>
+                  <div class="extra-small text-success mt-1"><i class="bi bi-arrow-up-right"></i> +12% this week</div>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="dash-stat-card">
+                  <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="extra-small text-muted fw-bold text-uppercase">Favorite Photos</span>
+                    <div class="stat-icon-wrapper bg-danger-subtle text-danger">
+                      <i class="bi bi-heart-fill"></i>
+                    </div>
+                  </div>
+                  <h3 class="fw-bold mb-0" id="dash-stat-favs">2</h3>
+                  <div class="extra-small text-muted mt-1">Saved to collection</div>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="dash-stat-card">
+                  <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="extra-small text-muted fw-bold text-uppercase">Saved Albums</span>
+                    <div class="stat-icon-wrapper bg-info-subtle text-info">
+                      <i class="bi bi-images"></i>
+                    </div>
+                  </div>
+                  <h3 class="fw-bold mb-0" id="dash-stat-albums">2</h3>
+                  <div class="extra-small text-muted mt-1">Published campus galleries</div>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="dash-stat-card">
+                  <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="extra-small text-muted fw-bold text-uppercase">Events Visited</span>
+                    <div class="stat-icon-wrapper bg-warning-subtle text-warning">
+                      <i class="bi bi-calendar-event-fill"></i>
+                    </div>
+                  </div>
+                  <h3 class="fw-bold mb-0" id="dash-stat-events">8</h3>
+                  <div class="extra-small text-warning mt-1"><i class="bi bi-award"></i> Press Pass Holder</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dashboard Grid: Recent Memories & Upcoming Events Widget -->
+            <div class="row g-4 mb-4">
+              <!-- Recent Memories Section -->
+              <div class="col-lg-7">
+                <div class="glass-panel p-4 h-100">
+                  <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="fw-bold mb-0 font-heading"><i class="bi bi-clock-history me-2 text-primary"></i> Recent Memories Section</h5>
+                    <a href="#featured-memories" class="extra-small text-primary fw-semibold">View Gallery <i class="bi bi-arrow-right"></i></a>
+                  </div>
+                  <div class="row g-3" id="dash-recent-memories-grid">
+                    <!-- Loaded dynamically via JS -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Upcoming Events Widget with Live Countdown Timer -->
+              <div class="col-lg-5">
+                <div class="glass-panel p-4 h-100">
+                  <h5 class="fw-bold mb-3 font-heading"><i class="bi bi-calendar-range-fill me-2 text-warning"></i> Upcoming Events Widget</h5>
+                  <div class="p-3 bg-body-tertiary rounded-3 border mb-3">
+                    <span class="badge bg-danger mb-2">LIVE NEXT</span>
+                    <h6 class="fw-bold mb-1">Spring Convocation & Honors Gala 2026</h6>
+                    <div class="extra-small text-muted mb-3"><i class="bi bi-geo-alt me-1"></i> Gothic Auditorium Lawn</div>
+
+                    <!-- Countdown Timer -->
+                    <div class="d-flex align-items-center justify-content-center gap-2 my-2 text-center">
+                      <div class="countdown-box">
+                        <div class="countdown-num" id="cd-days">02</div>
+                        <div class="countdown-label">Days</div>
+                      </div>
+                      <span class="fw-bold fs-5 text-muted">:</span>
+                      <div class="countdown-box">
+                        <div class="countdown-num" id="cd-hours">14</div>
+                        <div class="countdown-label">Hours</div>
+                      </div>
+                      <span class="fw-bold fs-5 text-muted">:</span>
+                      <div class="countdown-box">
+                        <div class="countdown-num" id="cd-mins">32</div>
+                        <div class="countdown-label">Mins</div>
+                      </div>
+                      <span class="fw-bold fs-5 text-muted">:</span>
+                      <div class="countdown-box">
+                        <div class="countdown-num" id="cd-secs">05</div>
+                        <div class="countdown-label">Secs</div>
+                      </div>
+                    </div>
+
+                    <button class="btn btn-gradient btn-sm w-100 mt-2 rsvp-trigger" data-event="Spring Convocation Gala" data-bs-toggle="modal" data-bs-target="#rsvpModal">
+                      <i class="bi bi-ticket-perforated-fill me-1"></i> Request Press Pass
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Favorite Memories Section -->
+            <div class="glass-panel p-4 mb-4">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <h5 class="fw-bold mb-0 font-heading"><i class="bi bi-heart-fill me-2 text-danger"></i> Favorite Memories</h5>
+                <span class="extra-small text-muted">Click trash icon to remove favorite</span>
+              </div>
+              <div class="row g-3" id="dash-favorites-grid">
+                <!-- Loaded dynamically via JS -->
+              </div>
+            </div>
+
+            <!-- Activity Timeline -->
+            <div class="glass-panel p-4">
+              <h5 class="fw-bold mb-3 font-heading"><i class="bi bi-activity me-2 text-info"></i> Activity Timeline</h5>
+              <div class="activity-timeline">
+                <div class="timeline-item">
+                  <div class="timeline-point"><i class="bi bi-heart-fill"></i></div>
+                  <div class="fw-bold small">Saved 'Golden Hour Over Central Quadrangle' to Favorites</div>
+                  <div class="text-muted extra-small">2 hours ago • Gallery Exploration</div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-point"><i class="bi bi-cloud-upload-fill"></i></div>
+                  <div class="fw-bold small">Published 'Spring Convocation Procession' Media Album</div>
+                  <div class="text-muted extra-small">1 day ago • Student Photojournalism Archive</div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-point"><i class="bi bi-ticket-perforated-fill"></i></div>
+                  <div class="fw-bold small">Confirmed Press Pass for Varsity Football Championship</div>
+                  <div class="text-muted extra-small">3 days ago • Press Desk</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       USER PROFILE PAGE VIEW (#page-profile)
+       ========================================== -->
+  <div id="page-profile" class="page-view d-none">
+    <div class="container max-w-7xl pt-nav py-5">
+      <div class="glass-panel p-0 overflow-hidden mb-4">
+        <div class="profile-cover-banner position-relative" id="prof-page-cover">
+          <div class="profile-cover-overlay"></div>
+          <!-- Cover Photo Edit Actions -->
+          <div class="profile-cover-actions position-absolute bottom-0 end-0 m-3 z-3" id="prof-cover-actions">
+            <div class="dropdown">
+              <button class="btn btn-sm glass-panel text-white border-0 rounded-pill px-3 py-1.5 shadow-sm d-flex align-items-center gap-2 hover-scale" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Cover Photo Options">
+                <i class="bi bi-camera-fill"></i>
+                <span class="small fw-semibold d-none d-sm-inline">Edit Cover</span>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end glass-dropdown border-0 shadow-lg py-1">
+                <li>
+                  <button type="button" class="dropdown-item d-flex align-items-center gap-2 small py-2" id="btn-change-cover">
+                    <i class="bi bi-upload text-primary"></i> Change Cover Photo
+                  </button>
+                </li>
+                <li>
+                  <button type="button" class="dropdown-item d-flex align-items-center gap-2 small py-2" id="btn-view-cover">
+                    <i class="bi bi-eye text-info"></i> View Cover Photo
+                  </button>
+                </li>
+                <li><hr class="dropdown-divider my-1"></li>
+                <li>
+                  <button type="button" class="dropdown-item d-flex align-items-center gap-2 small py-2 text-danger" id="btn-remove-cover">
+                    <i class="bi bi-trash3 text-danger"></i> Remove Cover Photo
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <input type="file" id="prof-cover-file-input" accept="image/*" class="d-none">
+        </div>
+        <div class="px-4 pb-4">
+          <div class="d-flex flex-column flex-md-row align-items-center align-items-md-end justify-content-between gap-3">
+            <div class="d-flex flex-column flex-md-row align-items-center align-items-md-end gap-3 text-center text-md-start">
+              <div class="profile-avatar-wrapper position-relative">
+                <img id="prof-page-avatar" src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=300" class="profile-avatar-large cursor-pointer" alt="Profile Avatar" title="Click to view full photo">
+                <div class="profile-status-badge"></div>
+                <!-- Avatar Edit Actions -->
+                <div class="profile-avatar-actions position-absolute bottom-0 end-0 z-3" id="prof-avatar-actions">
+                  <div class="dropdown">
+                    <button class="btn btn-sm btn-primary rounded-circle p-0 shadow border border-2 border-white d-flex align-items-center justify-content-center hover-scale" style="width: 32px; height: 32px;" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Change Profile Picture">
+                      <i class="bi bi-camera-fill fs-6"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-start glass-dropdown border-0 shadow-lg py-1">
+                      <li>
+                        <button type="button" class="dropdown-item d-flex align-items-center gap-2 small py-2" id="btn-change-avatar">
+                          <i class="bi bi-person-bounding-box text-primary"></i> Change Profile Picture
+                        </button>
+                      </li>
+                      <li>
+                        <button type="button" class="dropdown-item d-flex align-items-center gap-2 small py-2" id="btn-view-avatar">
+                          <i class="bi bi-eye text-info"></i> View Full Avatar
+                        </button>
+                      </li>
+                      <li><hr class="dropdown-divider my-1"></li>
+                      <li>
+                        <button type="button" class="dropdown-item d-flex align-items-center gap-2 small py-2 text-danger" id="btn-remove-avatar">
+                          <i class="bi bi-trash3 text-danger"></i> Remove Profile Picture
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                <input type="file" id="prof-avatar-file-input" accept="image/*" class="d-none">
+              </div>
+              <div class="pt-2">
+                <h3 class="font-heading fw-bold mb-1" id="prof-page-name">Alex Rivera</h3>
+                <div class="text-muted small mb-1" id="prof-page-role">Student Photographer</div>
+                <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-2 extra-small text-muted flex-wrap">
+                  <span id="prof-page-dept"><i class="bi bi-mortarboard me-1"></i> Media Arts '27</span>
+                  <span>•</span>
+                  <span id="prof-page-email">alex.rivera@university.edu</span>
+                </div>
+              </div>
+            </div>
+            <a href="#settings" class="btn btn-outline-primary btn-sm rounded-pill px-4">
+              <i class="bi bi-pencil-square me-1"></i> Edit Profile Button
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <!-- Profile Left Info Cards -->
+        <div class="col-lg-4">
+          <div class="glass-panel p-4 mb-4">
+            <h6 class="fw-bold mb-3 font-heading"><i class="bi bi-person-lines-fill me-2 text-primary"></i> Profile Information</h6>
+            <div class="mb-3">
+              <div class="extra-small text-muted fw-semibold">FULL NAME</div>
+              <div class="fw-bold" id="prof-field-fullname">Alex Rivera</div>
+            </div>
+            <div class="mb-3">
+              <div class="extra-small text-muted fw-semibold">STUDENT ID</div>
+              <div class="fw-bold" id="prof-field-stuid">STU-2026-8942</div>
+            </div>
+            <div class="mb-3">
+              <div class="extra-small text-muted fw-semibold">DEPARTMENT</div>
+              <div class="fw-bold" id="prof-field-dept">Media & Fine Arts</div>
+            </div>
+            <div class="mb-3">
+              <div class="extra-small text-muted fw-semibold">BATCH / YEAR</div>
+              <div class="fw-bold" id="prof-field-batch">2026 - 2028</div>
+            </div>
+            <div class="mb-3">
+              <div class="extra-small text-muted fw-semibold">EMAIL</div>
+              <div class="fw-bold" id="prof-field-email">alex.rivera@university.edu</div>
+            </div>
+            <div class="mb-3">
+              <div class="extra-small text-muted fw-semibold">FAVORITE CATEGORY</div>
+              <div class="fw-bold text-accent" id="prof-field-favcat">Varsity Sports & Sunset Landscapes</div>
+            </div>
+          </div>
+
+          <div class="glass-panel p-4">
+            <h6 class="fw-bold mb-3 font-heading"><i class="bi bi-chat-quote-fill me-2 text-warning"></i> Biography</h6>
+            <p class="text-muted small mb-0" id="prof-field-bio">
+              Passionate about capturing high-energy campus sports, homecoming celebrations, and golden hour architecture at the Central Quad.
+            </p>
+          </div>
+        </div>
+
+        <!-- Profile Right Activity & Stats -->
+        <div class="col-lg-8">
+          <!-- Statistics Bar -->
+          <div class="row g-3 mb-4">
+            <div class="col-6 col-sm-3">
+              <div class="p-3 glass-panel text-center">
+                <div class="fs-4 fw-bold text-primary" id="prof-stat-viewed">142</div>
+                <div class="extra-small text-muted">Photos Viewed</div>
+              </div>
+            </div>
+            <div class="col-6 col-sm-3">
+              <div class="p-3 glass-panel text-center">
+                <div class="fs-4 fw-bold text-danger" id="prof-stat-favs">2</div>
+                <div class="extra-small text-muted">Favorites</div>
+              </div>
+            </div>
+            <div class="col-6 col-sm-3">
+              <div class="p-3 glass-panel text-center">
+                <div class="fs-4 fw-bold text-info" id="prof-stat-albums">2</div>
+                <div class="extra-small text-muted">Albums Saved</div>
+              </div>
+            </div>
+            <div class="col-6 col-sm-3">
+              <div class="p-3 glass-panel text-center">
+                <div class="fs-4 fw-bold text-warning" id="prof-stat-events">8</div>
+                <div class="extra-small text-muted">Events Joined</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Saved Albums / Uploaded Campus Memories Section -->
+          <div class="glass-panel p-4 mb-4">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <h5 class="fw-bold mb-0 font-heading"><i class="bi bi-images me-2 text-info"></i> My Published Campus Memories & Albums</h5>
+              <button class="btn btn-primary btn-sm submit-memories-btn-trigger">
+                <i class="bi bi-cloud-upload me-1"></i> Upload New Album
+              </button>
+            </div>
+            <div class="row g-3" id="prof-page-uploads-grid">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Saved Favorites -->
+          <div class="glass-panel p-4">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <h5 class="fw-bold mb-0 font-heading"><i class="bi bi-heart-fill me-2 text-danger"></i> My Saved Favorites</h5>
+              <span class="extra-small text-muted">Click trash icon to remove favorite</span>
+            </div>
+            <div class="row g-3" id="prof-page-favorites-grid">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       SETTINGS PAGE VIEW (#page-settings)
+       ========================================== -->
+  <div id="page-settings" class="page-view d-none">
+    <div class="container max-w-7xl pt-nav py-5">
+      <div class="glass-panel p-4 p-md-5 max-w-4xl mx-auto">
+        <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
+          <div>
+            <h3 class="font-heading fw-bold mb-1"><i class="bi bi-gear-fill me-2 text-primary"></i> Settings Page</h3>
+            <p class="text-muted small mb-0">Manage system toggles, dark mode, privacy options, and profile information.</p>
+          </div>
+          <a href="#dashboard" class="btn btn-outline-secondary btn-sm rounded-pill"><i class="bi bi-arrow-left me-1"></i> Dashboard</a>
+        </div>
+
+        <form id="standalone-settings-form">
+          <!-- System Toggles Section -->
+          <h6 class="fw-bold font-heading mb-3 text-uppercase text-muted extra-small">Interface Toggles</h6>
+          <div class="p-3 bg-body-tertiary rounded-3 border mb-4">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+              <div>
+                <div class="fw-bold small"><i class="bi bi-moon-stars me-2 text-primary"></i> Dark Mode Toggle</div>
+                <div class="extra-small text-muted">Toggle dark theme across the web application</div>
+              </div>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="settingDarkModeToggle" style="width: 45px; height: 24px;">
+              </div>
+            </div>
+
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+              <div>
+                <div class="fw-bold small"><i class="bi bi-bell me-2 text-warning"></i> Notification Toggle</div>
+                <div class="extra-small text-muted">Enable real-time toast notifications and event press pass alerts</div>
+              </div>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="settingNotifToggle" checked style="width: 45px; height: 24px;">
+              </div>
+            </div>
+
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+              <div>
+                <div class="fw-bold small"><i class="bi bi-shield-lock me-2 text-success"></i> Privacy Toggle</div>
+                <div class="extra-small text-muted">Keep profile and saved favorites visible only to authenticated students</div>
+              </div>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="settingPrivacyToggle" checked style="width: 45px; height: 24px;">
+              </div>
+            </div>
+
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <div class="fw-bold small"><i class="bi bi-translate me-2 text-info"></i> Language Dropdown</div>
+                <div class="extra-small text-muted">Select interface locale</div>
+              </div>
+              <select class="form-select form-select-sm" style="max-width: 160px;" id="settingLanguageSelect">
+                <option value="en">English (US)</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="de">Deutsch</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Edit Profile Information -->
+          <h6 class="fw-bold font-heading mb-3 text-uppercase text-muted extra-small">Update Profile Information</h6>
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Full Name</label>
+              <input type="text" id="settingFullName" class="form-control" placeholder="Alex Rivera">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Department / Class</label>
+              <input type="text" id="settingDeptRole" class="form-control" placeholder="Media Arts '27">
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold">Avatar Image URL</label>
+              <input type="url" id="settingAvatarLink" class="form-control" placeholder="https://images.unsplash.com/...">
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold">Biography</label>
+              <textarea id="settingBioText" class="form-control" rows="2" placeholder="Tell us about your photography interest..."></textarea>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-gradient px-5 py-25 fw-semibold">
+            <i class="bi bi-save-fill me-2"></i> Save Button
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       ADMIN CONTROL CENTER PAGE VIEW (#page-admin)
+       ========================================== -->
+  <div id="page-admin" class="page-view d-none">
+    <div class="container max-w-7xl pt-nav py-5">
+      <!-- Admin Header Banner -->
+      <div class="glass-panel p-4 mb-4 bg-gradient">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+          <div class="d-flex align-items-center gap-3">
+            <div class="brand-icon-wrapper bg-warning text-dark fs-3 rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 56px; height: 56px;">
+              <i class="bi bi-shield-lock-fill"></i>
+            </div>
+            <div>
+              <div class="d-flex align-items-center gap-2">
+                <h3 class="font-heading fw-bold mb-0">Admin Control Center</h3>
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Admin Master Access</span>
+              </div>
+              <p class="text-muted small mb-0">Manage gallery photos, delete any memory, change Photo of the Week, add video stories & customize site content.</p>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#uploadAlbumModal">
+              <i class="bi bi-plus-circle-fill me-1"></i> Add New Memory
+            </button>
+            <a href="#featured-memories" class="btn btn-outline-secondary btn-sm rounded-pill">
+              <i class="bi bi-eye-fill me-1"></i> View Live Site
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin Tabs Navigation -->
+      <ul class="nav nav-pills custom-admin-tabs mb-4 p-2 bg-body-tertiary rounded-3 border" id="adminTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active fw-bold small" id="admin-tab-pending" data-bs-toggle="pill" data-bs-target="#admin-pane-pending" type="button" role="tab">
+            <i class="bi bi-clock-history me-1 text-warning"></i> Pending Submissions (<span id="admin-pending-count-badge" class="badge bg-warning text-dark ms-1">0</span>)
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link fw-bold small" id="admin-tab-potw" data-bs-toggle="pill" data-bs-target="#admin-pane-potw" type="button" role="tab">
+            <i class="bi bi-award-fill me-1 text-warning"></i> Photo of the Week
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link fw-bold small" id="admin-tab-photos" data-bs-toggle="pill" data-bs-target="#admin-pane-photos" type="button" role="tab">
+            <i class="bi bi-images me-1 text-info"></i> All Photos & Albums (<span id="admin-total-photos-count">0</span>)
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link fw-bold small" id="admin-tab-videos" data-bs-toggle="pill" data-bs-target="#admin-pane-videos" type="button" role="tab">
+            <i class="bi bi-play-btn-fill me-1 text-danger"></i> Add Video / Story
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link fw-bold small" id="admin-tab-config" data-bs-toggle="pill" data-bs-target="#admin-pane-config" type="button" role="tab">
+            <i class="bi bi-sliders me-1 text-primary"></i> Site Info & Counters
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link fw-bold small" id="admin-tab-backup" data-bs-toggle="pill" data-bs-target="#admin-pane-backup" type="button" role="tab">
+            <i class="bi bi-database-fill-gear me-1 text-primary"></i> Archive Backup
+          </button>
+        </li>
+      </ul>
+
+      <!-- Admin Tab Content Panes -->
+      <div class="tab-content" id="adminTabsContent">
+
+        <!-- Pane 0: Pending Submissions Moderation Queue -->
+        <div class="tab-pane fade show active" id="admin-pane-pending" role="tabpanel">
+          <div class="glass-panel p-4 mb-4">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+              <div>
+                <h5 class="fw-bold font-heading mb-1"><i class="bi bi-shield-check text-warning me-2"></i> Pending Submissions Moderation Queue</h5>
+                <p class="text-muted extra-small mb-0">Review user uploaded photography and media albums before publishing them publicly to MULens.</p>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2 rounded-pill small fw-bold">
+                  <i class="bi bi-hourglass-split me-1"></i> <span id="admin-pending-header-count">0</span> Pending Review
+                </span>
+              </div>
+            </div>
+
+            <div id="admin-pending-submissions-list" class="row g-4">
+              <!-- Dynamically populated pending cards -->
+            </div>
+          </div>
+        </div>
+        
+        <!-- Pane 1: Photo of the Week Manager -->
+        <div class="tab-pane fade" id="admin-pane-potw" role="tabpanel">
+          <div class="row g-4">
+            <!-- Active POTW Preview Card -->
+            <div class="col-lg-5">
+              <div class="glass-panel p-4 h-100">
+                <h5 class="fw-bold font-heading mb-3"><i class="bi bi-trophy-fill text-warning me-2"></i> Current Photo of the Week</h5>
+                <div id="admin-active-potw-preview" class="rounded-3 overflow-hidden border shadow-sm position-relative mb-3 bg-black" style="min-height: 220px;">
+                  <!-- Rendered dynamically -->
+                </div>
+                <button type="button" class="btn btn-outline-danger btn-sm w-100 rounded-pill" id="admin-reset-potw-btn">
+                  <i class="bi bi-arrow-counterclockwise me-1"></i> Reset to Default POTW
+                </button>
+              </div>
+            </div>
+
+            <!-- POTW Editor / Picker Form -->
+            <div class="col-lg-7">
+              <div class="glass-panel p-4">
+                <h5 class="fw-bold font-heading mb-3"><i class="bi bi-pencil-square me-2 text-primary"></i> Change Photo of the Week</h5>
+                
+                <!-- Quick Select From Existing Memories -->
+                <div class="mb-4 p-3 bg-body-tertiary rounded-3 border">
+                  <label class="form-label fw-bold extra-small text-uppercase text-muted">Quick Pick From Published Gallery Memories</label>
+                  <div class="input-group">
+                    <select class="form-select" id="admin-potw-select-memory">
+                      <option value="">-- Choose a photo/album from live gallery --</option>
+                    </select>
+                    <button class="btn btn-primary" type="button" id="admin-apply-selected-potw">Set as POTW</button>
+                  </div>
+                </div>
+
+                <div class="text-center my-3"><span class="bg-body-secondary px-3 py-1 rounded-pill extra-small text-muted fw-bold">OR CUSTOMIZE MANUALLY</span></div>
+
+                <form id="admin-custom-potw-form" class="mt-3">
+                  <div class="row g-3">
+                    <div class="col-md-12">
+                      <label class="form-label small fw-bold">Photo Title</label>
+                      <input type="text" class="form-control" id="adminPotwTitle" placeholder="e.g. Sunset Reflections Over Main Quad" required>
+                    </div>
+                    <div class="col-md-12">
+                      <label class="form-label small fw-bold">Image URL</label>
+                      <input type="url" class="form-control" id="adminPotwImageUrl" placeholder="https://images.unsplash.com/..." required>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label small fw-bold">Photographer Name</label>
+                      <input type="text" class="form-control" id="adminPotwAuthorName" placeholder="Elena Rostova '26">
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label small fw-bold">Photographer Role/Department</label>
+                      <input type="text" class="form-control" id="adminPotwAuthorRole" placeholder="Senior Photojournalist">
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label small fw-bold">Location / Landmark</label>
+                      <input type="text" class="form-control" id="adminPotwLocation" placeholder="Central Quadrangle">
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label small fw-bold">Badge / Week Label</label>
+                      <input type="text" class="form-control" id="adminPotwBadge" placeholder="Winner • Week 18">
+                    </div>
+                    <div class="col-md-12">
+                      <label class="form-label small fw-bold">Quote / Story Caption</label>
+                      <textarea class="form-control" id="adminPotwQuote" rows="3" placeholder="Describe why this photograph was selected..."></textarea>
+                    </div>
+                  </div>
+                  <button type="submit" class="btn btn-success w-100 mt-3 rounded-pill fw-bold">
+                    <i class="bi bi-check-circle-fill me-1"></i> Save & Publish Photo of the Week
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pane 2: Manage All Photos & Albums Table -->
+        <div class="tab-pane fade" id="admin-pane-photos" role="tabpanel">
+          <div class="glass-panel p-4">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+              <div>
+                <h5 class="fw-bold font-heading mb-0"><i class="bi bi-grid-3x3-gap-fill text-info me-2"></i> All Published Gallery Photos & Albums</h5>
+                <p class="text-muted extra-small mb-0">Delete any photo or album instantly, or edit details in real-time.</p>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <input type="text" class="form-control form-control-sm" id="admin-photo-search-input" placeholder="Search by title, department, photographer..." style="width: 250px;">
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-hover align-middle extra-small">
+                <thead class="table-dark">
+                  <tr>
+                    <th scope="col" style="width: 70px;">Thumbnail</th>
+                    <th scope="col">Title & Category</th>
+                    <th scope="col">Photographer</th>
+                    <th scope="col">Location & Date</th>
+                    <th scope="col">Type</th>
+                    <th scope="col" class="text-end" style="width: 180px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-photos-table-body">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pane 3: Add Video Story / Custom Memory -->
+        <div class="tab-pane fade" id="admin-pane-videos" role="tabpanel">
+          <div class="glass-panel p-4 max-w-3xl mx-auto">
+            <h5 class="fw-bold font-heading mb-3"><i class="bi bi-camera-reels-fill text-danger me-2"></i> Add Video Story or New Memory</h5>
+            <form id="admin-add-video-form">
+              <div class="row g-3">
+                <div class="col-md-8">
+                  <label class="form-label small fw-bold">Title</label>
+                  <input type="text" class="form-control" id="adminVideoTitle" placeholder="e.g. Annual Sports Festival Highlights Video" required>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label small fw-bold">Category / Department</label>
+                  <select class="form-select" id="adminVideoCategory">
+                    <option value="CSE">CSE Department</option>
+                    <option value="eee">EEE Department</option>
+                    <option value="law">Law Department</option>
+                    <option value="bba">BBA Department</option>
+                    <option value="english">English Department</option>
+                    <option value="university_events">University events</option>
+                    <option value="campus" selected>Campus Life</option>
+                  </select>
+                </div>
+                <div class="col-md-12">
+                  <label class="form-label small fw-bold">Cover Thumbnail Image URL or Video URL</label>
+                  <input type="url" class="form-control" id="adminVideoUrl" placeholder="https://images.unsplash.com/... or video thumbnail URL" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small fw-bold">Photographer / Creator Name</label>
+                  <input type="text" class="form-control" id="adminVideoAuthor" placeholder="Media Club Crew">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small fw-bold">Location</label>
+                  <input type="text" class="form-control" id="adminVideoLocation" placeholder="Main Auditorium Grounds">
+                </div>
+                <div class="col-md-12">
+                  <label class="form-label small fw-bold">Story Description</label>
+                  <textarea class="form-control" id="adminVideoDesc" rows="3" placeholder="Write a short summary of this story or video release..."></textarea>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-danger w-100 mt-4 rounded-pill fw-bold">
+                <i class="bi bi-cloud-arrow-up-fill me-1"></i> Publish Video Story to Gallery
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Pane 4: Website General Config & Counters -->
+        <div class="tab-pane fade" id="admin-pane-config" role="tabpanel">
+          <div class="glass-panel p-4 max-w-3xl mx-auto">
+            <h5 class="fw-bold font-heading mb-3"><i class="bi bi-sliders text-primary me-2"></i> Website Branding & Live Counters</h5>
+            <form id="admin-site-config-form">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label small fw-bold">Website Name</label>
+                  <input type="text" class="form-control" id="adminCfgAppName" value="MULens">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small fw-bold">Hero Archive Badge Text</label>
+                  <input type="text" class="form-control" id="adminCfgBadge" value="Official Campus Photography Archive">
+                </div>
+                <div class="col-md-12">
+                  <label class="form-label small fw-bold">Hero Title Prefix</label>
+                  <input type="text" class="form-control" id="adminCfgHeroTitle" value="Capturing Every Angle Of">
+                </div>
+                <div class="col-md-12">
+                  <label class="form-label small fw-bold">Hero Highlight Text</label>
+                  <input type="text" class="form-control" id="adminCfgHeroHighlight" value="University Life & Memories">
+                </div>
+                <div class="col-md-12">
+                  <label class="form-label small fw-bold">Hero Subtitle</label>
+                  <textarea class="form-control" id="adminCfgHeroSubtitle" rows="2">Discover, share, and preserve high-resolution moments, departmental events, and student photojournalism across Metro University.</textarea>
+                </div>
+
+                <hr class="my-4">
+                <h6 class="fw-bold text-uppercase extra-small text-muted mb-2">Live Statistic Counters Override</h6>
+                <div class="col-6 col-md-3">
+                  <label class="form-label extra-small fw-bold">Photos Count</label>
+                  <input type="number" class="form-control form-control-sm" id="adminStatPhotos" value="48500">
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label extra-small fw-bold">Videos Count</label>
+                  <input type="number" class="form-control form-control-sm" id="adminStatVideos" value="1200">
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label extra-small fw-bold">Events Count</label>
+                  <input type="number" class="form-control form-control-sm" id="adminStatEvents" value="350">
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label extra-small fw-bold">Contributors</label>
+                  <input type="number" class="form-control form-control-sm" id="adminStatContributors" value="850">
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary w-100 mt-4 rounded-pill fw-bold">
+                <i class="bi bi-save-fill me-1"></i> Save Website Configuration & Counters
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Pane 5: Archive Backup & Restore -->
+        <div class="tab-pane fade" id="admin-pane-backup" role="tabpanel">
+          <div class="glass-panel p-4 mb-4">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+              <div>
+                <h5 class="fw-bold font-heading mb-1"><i class="bi bi-database-fill-gear text-primary me-2"></i> Archive Backup & Migration</h5>
+                <p class="text-muted extra-small mb-0">Export the entire media repository, IndexedDB blobs, album metadata, and user accounts to a portable JSON backup file, or restore an existing archive onto this instance.</p>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill small fw-bold">
+                  <i class="bi bi-shield-lock-fill me-1"></i> IndexedDB Portable Engine
+                </span>
+              </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+              <!-- Export Archive Card -->
+              <div class="col-lg-6">
+                <div class="card bg-body-tertiary border shadow-sm rounded-3 p-4 h-100 d-flex flex-column justify-content-between">
+                  <div>
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                      <div class="p-3 bg-primary bg-opacity-10 text-primary rounded-circle fs-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                        <i class="bi bi-box-arrow-up"></i>
+                      </div>
+                      <div>
+                        <h6 class="fw-bold font-heading mb-1">Export Complete Archive</h6>
+                        <span class="badge bg-success-subtle text-success extra-small">Portable JSON Format</span>
+                      </div>
+                    </div>
+                    <p class="text-muted extra-small mb-3">
+                      Generates a downloadable backup file containing all user-uploaded photos, multi-image albums, media blobs, titles, descriptions, approval statuses, user profiles, and website configurations.
+                    </p>
+                    <ul class="list-unstyled extra-small text-muted mb-4 space-y-1">
+                      <li><i class="bi bi-check-circle-fill text-success me-2"></i>Full Binary Image Blobs (Encoded)</li>
+                      <li><i class="bi bi-check-circle-fill text-success me-2"></i>Pending, Approved & Rejected Statuses</li>
+                      <li><i class="bi bi-check-circle-fill text-success me-2"></i>User Accounts, Profiles & Custom Settings</li>
+                    </ul>
+                  </div>
+                  <button type="button" class="btn btn-primary w-100 py-2.5 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2" id="admin-export-archive-btn">
+                    <i class="bi bi-download fs-6"></i> 📤 Export Archive
+                  </button>
+                </div>
+              </div>
+
+              <!-- Import Archive Card -->
+              <div class="col-lg-6">
+                <div class="card bg-body-tertiary border shadow-sm rounded-3 p-4 h-100 d-flex flex-column justify-content-between">
+                  <div>
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                      <div class="p-3 bg-info bg-opacity-10 text-info rounded-circle fs-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                        <i class="bi bi-box-arrow-in-down"></i>
+                      </div>
+                      <div>
+                        <h6 class="fw-bold font-heading mb-1">Import & Restore Archive</h6>
+                        <span class="badge bg-warning-subtle text-warning extra-small">Safe Restore Engine</span>
+                      </div>
+                    </div>
+                    <p class="text-muted extra-small mb-3">
+                      Restores a previously exported MULens archive file. Restores image blobs into IndexedDB and merges missing records while automatically skipping duplicates.
+                    </p>
+                    <ul class="list-unstyled extra-small text-muted mb-4 space-y-1">
+                      <li><i class="bi bi-shield-check text-info me-2"></i>Duplicate Prevention (Preserves existing IDs)</li>
+                      <li><i class="bi bi-shield-check text-info me-2"></i>Automatic Version Validation</li>
+                      <li><i class="bi bi-shield-check text-info me-2"></i>Auto-Refreshes Gallery & Admin Views</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <input type="file" id="admin-import-file-input" accept=".json" class="d-none">
+                    <button type="button" class="btn btn-outline-primary w-100 py-2.5 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2" id="admin-import-archive-btn">
+                      <i class="bi bi-upload fs-6"></i> 📥 Import Archive
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Migration / System Note Banner -->
+            <div class="p-3 bg-body rounded-3 border d-flex align-items-center gap-3 text-muted extra-small">
+              <i class="bi bi-info-circle-fill text-primary fs-5 flex-shrink-0"></i>
+              <div>
+                <strong>Portable Workspace Synchronization:</strong> Use this system to export your complete database archive from AI Studio and import it into your local VS Code environment or Netlify production deployment.
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Import Archive Confirmation Modal -->
+  <div class="modal fade" id="importArchiveConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content glass-panel p-4 text-dark border-0">
+        <div class="modal-header border-bottom pb-3">
+          <div class="d-flex align-items-center gap-2">
+            <div class="p-2 bg-primary bg-opacity-10 text-primary rounded-circle">
+              <i class="bi bi-database-fill-down fs-5"></i>
+            </div>
+            <div>
+              <h5 class="font-heading fw-bold mb-0">Confirm Archive Restore</h5>
+              <span class="text-muted extra-small" id="archive-modal-filename">archive.json</span>
+            </div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body py-4">
+          <p class="text-muted small mb-3">
+            You are about to import the following MULens media archive into your local storage database.
+          </p>
+
+          <!-- Archive Info Summary Grid -->
+          <div class="row g-2 mb-4">
+            <div class="col-6 col-md-3">
+              <div class="p-3 bg-body-tertiary rounded-3 border text-center">
+                <div class="text-muted extra-small">Format Version</div>
+                <div class="fw-bold font-heading text-primary" id="archive-info-version">1.0.0</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="p-3 bg-body-tertiary rounded-3 border text-center">
+                <div class="text-muted extra-small">Media Items</div>
+                <div class="fw-bold font-heading text-success" id="archive-info-media">0</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="p-3 bg-body-tertiary rounded-3 border text-center">
+                <div class="text-muted extra-small">Binary Blobs</div>
+                <div class="fw-bold font-heading text-info" id="archive-info-blobs">0</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="p-3 bg-body-tertiary rounded-3 border text-center">
+                <div class="text-muted extra-small">User Accounts</div>
+                <div class="fw-bold font-heading text-warning" id="archive-info-users">0</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-3 bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-3 extra-small mb-2 d-flex align-items-start gap-2">
+            <i class="bi bi-shield-lock-fill fs-6 flex-shrink-0 mt-0.5"></i>
+            <div>
+              <strong>Duplicate Prevention active:</strong> Items and binary blobs with matching IDs that already exist in your local IndexedDB will be preserved. Only missing records and media assets will be safely added.
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-top pt-3 d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary btn-sm rounded-pill px-4 fw-bold" id="archive-confirm-import-btn">
+            <i class="bi bi-check-circle-fill me-1"></i> Confirm & Import Archive
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Registration Success Modal -->
+  <div class="modal fade" id="regSuccessModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content glass-panel text-center p-4 text-dark border-0">
+        <div class="brand-icon-wrapper mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.8rem; background: var(--gradient-primary); color: white;">
+          <i class="bi bi-check-lg"></i>
+        </div>
+        <h4 class="font-heading fw-bold mb-2">Registration Successful!</h4>
+        <p class="text-muted small mb-4">
+          Your MULens media creator account has been successfully initialized. You can now sign in to your dashboard.
+        </p>
+        <button type="button" class="btn btn-gradient w-100 py-2" id="reg-success-login-btn" data-bs-dismiss="modal">
+          Proceed to Login <i class="bi bi-arrow-right ms-1"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Photo / Album Details Lightbox Modal -->
+  <div class="modal fade" id="photoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+      <div class="modal-content glass-panel border-0 text-dark">
+        <div class="modal-header border-bottom d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <h5 class="modal-title font-heading fw-bold mb-0" id="modalPhotoTitle">Campus Memory</h5>
+            <span id="modalAlbumBadge" class="badge bg-warning text-dark extra-small d-none"><i class="bi bi-images me-1"></i> Album</span>
+            <span id="modalAspectRatioBadge" class="badge bg-secondary-subtle text-secondary extra-small border d-flex align-items-center gap-1">
+              <i class="bi bi-aspect-ratio me-1"></i> <span id="modalAspectRatioText">Original Ratio</span>
+            </span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-outline-dark btn-sm rounded-pill d-flex align-items-center gap-1.5 shadow-sm px-3" id="modalFullscreenBtn" title="View Fullscreen (Press F)">
+              <i class="bi bi-arrows-fullscreen"></i>
+              <span class="d-none d-sm-inline fw-semibold">Fullscreen</span>
+            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+        </div>
+        <div class="modal-body p-0">
+          <div class="row g-0">
+            <!-- Left Side: Main Photo & Carousel Controls -->
+            <div class="col-lg-8 bg-black d-flex flex-column align-items-center justify-content-center p-3 position-relative min-vh-50" id="photoViewerColumn">
+              
+              <!-- Album Navigation Header Controls -->
+              <div id="albumControlsHeader" class="position-absolute top-0 start-0 end-0 p-3 d-none d-flex justify-content-between align-items-center z-3 pointer-events-none">
+                <span class="badge bg-dark bg-opacity-75 text-white extra-small px-3 py-1.5 rounded-pill shadow-sm" id="albumCounterText">Photo 1 of 1</span>
+                <span class="extra-small text-white-50"><i class="bi bi-arrow-left-right me-1"></i> Arrow Keys • Press F for Fullscreen</span>
+              </div>
+
+              <!-- Prev Arrow Button -->
+              <button type="button" id="albumPrevBtn" class="btn btn-dark btn-sm rounded-circle position-absolute start-0 top-50 translate-middle-y ms-3 z-3 d-none shadow opacity-75 hover-opacity-100" style="width: 42px; height: 42px;">
+                <i class="bi bi-chevron-left fs-5"></i>
+              </button>
+
+              <!-- Main View Image -->
+              <div id="photoViewerWrapper" class="d-flex align-items-center justify-content-center w-100 h-100 overflow-hidden my-auto position-relative" style="min-height: 380px; max-height: 580px;">
+                <img id="modalPhotoImg" src="" alt="Full view" class="img-fluid rounded-2 max-vh-80 object-fit-contain shadow-lg transition-all" style="max-height: 80vh; max-width: 100%;">
+                <!-- Floating Quick Fullscreen Overlay Icon on Image -->
+                <button type="button" id="modalQuickFullscreenBtn" class="btn btn-dark btn-sm rounded-circle position-absolute bottom-0 end-0 m-3 z-3 shadow opacity-75 hover-opacity-100" title="Expand Fullscreen View" style="width: 40px; height: 40px;">
+                  <i class="bi bi-arrows-angle-expand fs-6"></i>
+                </button>
+              </div>
+
+              <!-- Next Arrow Button -->
+              <button type="button" id="albumNextBtn" class="btn btn-dark btn-sm rounded-circle position-absolute end-0 top-50 translate-middle-y me-3 z-3 d-none shadow opacity-75 hover-opacity-100" style="width: 42px; height: 42px;">
+                <i class="bi bi-chevron-right fs-5"></i>
+              </button>
+
+              <!-- Bottom Thumbnail Ribbon for Albums -->
+              <div id="albumThumbsContainer" class="w-100 pt-3 overflow-x-auto d-none z-2 border-top border-secondary-subtle">
+                <div id="albumThumbsRibbon" class="d-flex justify-content-center gap-2 px-2">
+                  <!-- Dynamically populated album image thumbnails -->
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Right Side: Metadata & Description -->
+            <div class="col-lg-4 p-4 d-flex flex-column">
+              <div class="mb-3">
+                <span id="modalPhotoTag" class="badge bg-primary-subtle text-primary mb-2">#Gallery</span>
+                <div class="d-flex align-items-center gap-2 text-muted small mb-3">
+                  <span><i class="bi bi-geo-alt-fill text-danger me-1"></i><span id="modalPhotoLocation">Main Quad</span></span>
+                  <span>•</span>
+                  <span><i class="bi bi-calendar3 me-1"></i><span id="modalPhotoDate">Spring 2026</span></span>
+                </div>
+              </div>
+
+              <div class="d-flex align-items-center gap-3 p-3 bg-body-tertiary rounded-3 mb-3">
+                <img id="modalPhotoAuthorAvatar" src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=150" class="rounded-circle" style="width: 44px; height: 44px; object-fit: cover;" alt="Author">
+                <div>
+                  <div class="fw-bold" id="modalPhotoAuthor">Student Photographer</div>
+                  <div class="text-muted extra-small" id="modalPhotoAuthorRole">MULens Media Contributor</div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <h6 class="fw-bold extra-small text-muted text-uppercase tracking-wider mb-2">Album Story / Description</h6>
+                <p id="modalPhotoDesc" class="small text-muted mb-0 lh-base">
+                  Campus memories captured live by university photojournalists and students.
+                </p>
+              </div>
+
+              <div class="mb-4">
+                <h6 class="fw-bold extra-small text-muted text-uppercase tracking-wider mb-2">Media Specifications</h6>
+                <div class="extra-small text-muted">
+                  <div>• Resolution: High Definition RAW</div>
+                  <div>• Rights: University Student Creative Commons</div>
+                </div>
+              </div>
+
+              <div class="mt-auto pt-3 border-top d-flex flex-column gap-2">
+                <button class="btn btn-gradient w-100 btn-sm" id="modalDownloadBtn">
+                  <i class="bi bi-download me-1"></i> Download High-Res Image
+                </button>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-outline-danger btn-sm flex-fill" id="modalDeletePhotoBtn" title="Delete current active photo in viewer">
+                    <i class="bi bi-trash me-1"></i> Delete Photo
+                  </button>
+                  <button class="btn btn-danger btn-sm flex-fill" id="modalDeleteAlbumBtn" title="Delete entire photo album">
+                    <i class="bi bi-trash-fill me-1"></i> Delete Album
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RSVP Media Pass Modal -->
+  <div class="modal fade" id="rsvpModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content glass-panel border-0 text-dark">
+        <div class="modal-header border-bottom">
+          <h5 class="modal-title font-heading fw-bold">Request Media Press Pass</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <form id="rsvp-form">
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Event Name</label>
+              <input type="text" id="rsvpEventName" class="form-control" readonly>
+            </div>
+            <div class="mb-3">
+              <label for="rsvpName" class="form-label small fw-semibold">Full Name</label>
+              <input type="text" id="rsvpName" class="form-control" placeholder="e.g. Alex Rivera" required>
+            </div>
+            <div class="mb-3">
+              <label for="rsvpEmail" class="form-label small fw-semibold">University Email</label>
+              <input type="email" id="rsvpEmail" class="form-control" placeholder="alex.rivera@university.edu" required>
+            </div>
+            <div class="mb-3">
+              <label for="rsvpRole" class="form-label small fw-semibold">Media Role</label>
+              <select id="rsvpRole" class="form-select">
+                <option value="photographer">Student Photographer</option>
+                <option value="videographer">Videographer</option>
+                <option value="press">Campus Journalist</option>
+                <option value="guest">Spectator</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-gradient w-100 py-2">
+              <i class="bi bi-ticket-perforated-fill"></i> Confirm Pass
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login Modal -->
+  <div class="modal fade auth-modal" id="loginModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="auth-modal-header text-center">
+          <button type="button" class="btn-close-custom" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+          <div class="brand-icon-wrapper mx-auto mb-3" style="width: 50px; height: 50px; font-size: 1.5rem;">
+            <i class="bi bi-camera2"></i>
+          </div>
+          <h4 class="font-heading fw-bold mb-1 text-white">Welcome Back</h4>
+          <p class="text-white-50 small mb-0">Sign in to your MULens creator account</p>
+        </div>
+        <div class="modal-body p-4">
+          <!-- Quick Demo Users -->
+          <div class="mb-3">
+            <label class="form-label extra-small text-muted text-uppercase fw-semibold tracking-wider">Quick Demo Login (1-Click)</label>
+            <div class="row g-2">
+              <div class="col-6">
+                <button type="button" class="demo-user-pill demo-login-btn" data-email="alex.rivera@university.edu">
+                  <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=150&auto=format&fit=crop" class="rounded-circle" style="width: 28px; height: 28px; object-fit: cover;" alt="Alex">
+                  <div class="text-truncate">
+                    <div class="fw-bold extra-small text-truncate">Alex Rivera</div>
+                    <div class="text-muted extra-small text-truncate" style="font-size: 0.7rem;">Photographer</div>
+                  </div>
+                </button>
+              </div>
+              <div class="col-6">
+                <button type="button" class="demo-user-pill demo-login-btn" data-email="elena.rostova@university.edu">
+                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop" class="rounded-circle" style="width: 28px; height: 28px; object-fit: cover;" alt="Elena">
+                  <div class="text-truncate">
+                    <div class="fw-bold extra-small text-truncate">Elena Rostova</div>
+                    <div class="text-muted extra-small text-truncate" style="font-size: 0.7rem;">Photo Fellow</div>
+                  </div>
+                </button>
+              </div>
+              <div class="col-6">
+                <button type="button" class="demo-user-pill demo-login-btn" data-email="fahim.rahman@demo.mulens.local">
+                  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop" class="rounded-circle" style="width: 28px; height: 28px; object-fit: cover;" alt="Fahmid">
+                  <div class="text-truncate">
+                    <div class="fw-bold extra-small text-truncate">Fahmid Samin</div>
+                    <div class="text-muted extra-small text-truncate" style="font-size: 0.7rem;">CSE Student</div>
+                  </div>
+                </button>
+              </div>
+              <div class="col-6">
+                <button type="button" class="demo-user-pill demo-login-btn" data-email="nusrat.jahan@demo.mulens.local">
+                  <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop" class="rounded-circle" style="width: 28px; height: 28px; object-fit: cover;" alt="Masrura">
+                  <div class="text-truncate">
+                    <div class="fw-bold extra-small text-truncate">Masrura Chowdhury</div>
+                    <div class="text-muted extra-small text-truncate" style="font-size: 0.7rem;">EEE Student</div>
+                  </div>
+                </button>
+              </div>
+              <div class="col-6">
+                <button type="button" class="demo-user-pill demo-login-btn" data-email="tahsin.ahmed@demo.mulens.local">
+                  <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=150&auto=format&fit=crop" class="rounded-circle" style="width: 28px; height: 28px; object-fit: cover;" alt="Tahsin">
+                  <div class="text-truncate">
+                    <div class="fw-bold extra-small text-truncate">Tahsin Ahmed</div>
+                    <div class="text-muted extra-small text-truncate" style="font-size: 0.7rem;">BBA Student</div>
+                  </div>
+                </button>
+              </div>
+              <div class="col-6">
+                <button type="button" class="demo-user-pill demo-login-btn" data-email="mehedi.hasan@demo.mulens.local">
+                  <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=150&auto=format&fit=crop" class="rounded-circle" style="width: 28px; height: 28px; object-fit: cover;" alt="Sagor">
+                  <div class="text-truncate">
+                    <div class="fw-bold extra-small text-truncate">Sagor Chowdhury</div>
+                    <div class="text-muted extra-small text-truncate" style="font-size: 0.7rem;">English Student</div>
+                  </div>
+                </button>
+              </div>
+              <div class="col-12 mt-2">
+                <button type="button" class="demo-user-pill demo-login-btn border-warning bg-warning-subtle text-dark w-100" data-email="shariaradnan88@gmail.com">
+                  <div class="d-flex align-items-center justify-content-between w-100 px-1">
+                    <div class="d-flex align-items-center gap-2">
+                      <i class="bi bi-shield-lock-fill text-warning fs-5"></i>
+                      <div class="text-start">
+                        <div class="fw-bold extra-small">Shariar Adnan (Admin)</div>
+                        <div class="text-muted extra-small" style="font-size: 0.7rem;">shariaradnan88@gmail.com</div>
+                      </div>
+                    </div>
+                    <span class="badge bg-warning text-dark extra-small"><i class="bi bi-key-fill me-1"></i> Admin Login</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center my-3">
+            <hr class="flex-grow-1 border-secondary-subtle my-0">
+            <span class="px-3 extra-small text-muted text-uppercase">Or with credentials</span>
+            <hr class="flex-grow-1 border-secondary-subtle my-0">
+          </div>
+
+          <form id="login-form">
+            <div class="auth-input-group">
+              <input type="email" id="loginEmail" class="form-control" placeholder="University Email (e.g. alex.rivera@university.edu)" required>
+              <i class="bi bi-envelope auth-icon"></i>
+            </div>
+            <div class="auth-input-group">
+              <input type="password" id="loginPassword" class="form-control" placeholder="Password" required>
+              <i class="bi bi-lock auth-icon"></i>
+              <button type="button" class="password-toggle-btn" title="Toggle Password Visibility">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+            <div class="d-flex align-items-center justify-content-between mb-4">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="rememberMe" checked>
+                <label class="form-check-label extra-small text-muted" for="rememberMe">Remember me</label>
+              </div>
+              <a href="#" class="extra-small text-accent text-decoration-none fw-semibold" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Forgot Password?</a>
+            </div>
+            <button type="submit" class="btn btn-gradient w-100 py-25 fw-semibold fs-6">
+              <i class="bi bi-box-arrow-in-right me-2"></i> Sign In to MULens
+            </button>
+          </form>
+
+          <div class="text-center mt-4 pt-3 border-top">
+            <span class="small text-muted">Don't have an account yet? </span>
+            <a href="#" class="small text-accent fw-bold text-decoration-none" data-bs-toggle="modal" data-bs-target="#registerModal">Register Now</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Register Modal -->
+  <div class="modal fade auth-modal" id="registerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="auth-modal-header text-center">
+          <button type="button" class="btn-close-custom" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+          <div class="brand-icon-wrapper mx-auto mb-3" style="width: 50px; height: 50px; font-size: 1.5rem;">
+            <i class="bi bi-camera2"></i>
+          </div>
+          <h4 class="font-heading fw-bold mb-1 text-white">Create Creator Account</h4>
+          <p class="text-white-50 small mb-0">Join the campus memory network & share department albums</p>
+        </div>
+        <div class="modal-body p-4">
+          <form id="register-form">
+            
+            <!-- Profile Picture Selection Box -->
+            <div class="mb-3 p-3 bg-dark-subtle rounded-3 text-center border border-secondary-subtle">
+              <label class="form-label extra-small fw-bold text-uppercase tracking-wider text-muted mb-2 d-block">
+                Choose Profile Picture
+              </label>
+              
+              <div class="d-flex align-items-center justify-content-center gap-3 mb-2">
+                <div class="position-relative">
+                  <img id="regModalAvatarPreview" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200" class="rounded-circle border border-2 border-primary shadow-sm" style="width: 64px; height: 64px; object-fit: cover;" alt="Avatar Preview">
+                  <span class="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 22px; height: 22px; font-size: 0.7rem;">
+                    <i class="bi bi-pencil-fill"></i>
+                  </span>
+                </div>
+
+                <div class="d-flex flex-column gap-1 text-start">
+                  <input type="file" id="regModalAvatarFile" accept="image/*" class="d-none">
+                  <button type="button" id="regModalUploadAvatarBtn" class="btn btn-outline-primary btn-xs">
+                    <i class="bi bi-upload me-1"></i> Upload Photo File
+                  </button>
+                  <span class="extra-small text-muted">Or pick a preset avatar below</span>
+                </div>
+              </div>
+
+              <!-- Quick Avatar Presets -->
+              <div class="d-flex justify-content-center gap-2 mt-2">
+                <button type="button" class="btn p-0 rounded-circle border modal-avatar-preset" data-url="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200">
+                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" alt="Preset 1">
+                </button>
+                <button type="button" class="btn p-0 rounded-circle border modal-avatar-preset" data-url="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=200">
+                  <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=200" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" alt="Preset 2">
+                </button>
+                <button type="button" class="btn p-0 rounded-circle border modal-avatar-preset" data-url="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200">
+                  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" alt="Preset 3">
+                </button>
+                <button type="button" class="btn p-0 rounded-circle border modal-avatar-preset" data-url="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200">
+                  <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" alt="Preset 4">
+                </button>
+                <button type="button" class="btn p-0 rounded-circle border modal-avatar-preset" data-url="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200">
+                  <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" alt="Preset 5">
+                </button>
+              </div>
+            </div>
+
+            <div class="auth-input-group">
+              <input type="text" id="regName" class="form-control" placeholder="Full Name (e.g. Jordan Lee)" required>
+              <i class="bi bi-person auth-icon"></i>
+            </div>
+            <div class="auth-input-group">
+              <input type="email" id="regEmail" class="form-control" placeholder="University Email or Student ID (@university.edu)" required>
+              <i class="bi bi-envelope auth-icon"></i>
+            </div>
+            <div class="auth-input-group">
+              <input type="text" id="regDept" class="form-control" placeholder="Department / Major (e.g. CSE Department, Law Department, EEE Department, BBA Department)">
+              <i class="bi bi-mortarboard auth-icon"></i>
+            </div>
+            <div class="auth-input-group">
+              <input type="password" id="regPassword" class="form-control" placeholder="Create Password" required minlength="4">
+              <i class="bi bi-lock auth-icon"></i>
+              <button type="button" class="password-toggle-btn" title="Toggle Password Visibility">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+            <div class="auth-input-group">
+              <input type="password" id="regConfirmPassword" class="form-control" placeholder="Confirm Password" required minlength="4">
+              <i class="bi bi-shield-lock auth-icon"></i>
+            </div>
+            <div class="form-check mb-4">
+              <input class="form-check-input" type="checkbox" id="agreeTerms" required checked>
+              <label class="form-check-label extra-small text-muted" for="agreeTerms">
+                I agree to the MULens <a href="#" class="text-accent text-decoration-none">Terms of Service</a> & Press Ethics Code.
+              </label>
+            </div>
+            <button type="submit" class="btn btn-gradient w-100 py-25 fw-semibold fs-6">
+              <i class="bi bi-check-circle-fill me-2"></i> Create & Sign In
+            </button>
+          </form>
+
+          <div class="text-center mt-4 pt-3 border-top">
+            <span class="small text-muted">Already registered? </span>
+            <a href="#" class="small text-accent fw-bold text-decoration-none" data-bs-toggle="modal" data-bs-target="#loginModal">Sign In Here</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Forgot Password Modal -->
+  <div class="modal fade auth-modal" id="forgotPasswordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="auth-modal-header text-center">
+          <button type="button" class="btn-close-custom" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+          <div class="brand-icon-wrapper mx-auto mb-3" style="width: 50px; height: 50px; font-size: 1.5rem; background: var(--gradient-gold);">
+            <i class="bi bi-key-fill"></i>
+          </div>
+          <h4 class="font-heading fw-bold mb-1 text-white">Reset Password</h4>
+          <p class="text-white-50 small mb-0">Recover your MULens creator account</p>
+        </div>
+        <div class="modal-body p-4">
+          <p class="text-muted small mb-4">
+            Enter your registered university email below. We will generate an instant verification code and password recovery link for you.
+          </p>
+          <form id="forgot-password-form">
+            <div class="auth-input-group">
+              <input type="email" id="resetEmail" class="form-control" placeholder="Enter your university email..." required>
+              <i class="bi bi-envelope auth-icon"></i>
+            </div>
+            <button type="submit" class="btn btn-gradient w-100 py-25 fw-semibold mb-3">
+              <i class="bi bi-send-fill me-2"></i> Send Reset Instructions
+            </button>
+          </form>
+          <div id="forgot-password-alert" class="d-none alert alert-success p-3 text-center extra-small mb-3">
+            <i class="bi bi-check-circle-fill me-1"></i> Reset code generated! Check your email inbox or use code <strong>#LENS-2026</strong> to sign in.
+          </div>
+          <div class="text-center pt-3 border-top">
+            <a href="#" class="small text-accent fw-bold text-decoration-none" data-bs-toggle="modal" data-bs-target="#loginModal">
+              <i class="bi bi-arrow-left me-1"></i> Back to Sign In
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Guest Interception Login Required Modal -->
+  <div class="modal fade auth-modal" id="guestModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content text-center">
+        <div class="modal-body p-4 p-md-5">
+          <div class="guest-lock-badge">
+            <i class="bi bi-lock-fill"></i>
+          </div>
+          <h3 class="font-heading fw-bold mb-2">Sign In Required</h3>
+          <p class="text-muted small mb-4 px-md-3">
+            Guests can browse photos, but you must be signed in to like campus photos, save favorites, create albums, or request press passes.
+          </p>
+          <div class="d-grid gap-2 mb-3">
+            <button class="btn btn-gradient py-25 fw-semibold" data-bs-toggle="modal" data-bs-target="#loginModal">
+              <i class="bi bi-box-arrow-in-right me-2"></i> Sign In to Continue
+            </button>
+            <button class="btn btn-outline-secondary py-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#registerModal">
+              Create New Creator Account
+            </button>
+          </div>
+          <button type="button" class="btn btn-link text-muted extra-small text-decoration-none" data-bs-dismiss="modal">
+            Continue Browsing as Guest
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Page Modal -->
+  <div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered profile-modal-dialog">
+      <div class="modal-content border-0 text-dark overflow-hidden">
+        
+        <!-- Profile Banner -->
+        <div class="profile-cover-banner position-relative" id="profile-modal-cover">
+          <div class="profile-cover-overlay"></div>
+          <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 z-3" data-bs-dismiss="modal" aria-label="Close"></button>
+          
+          <!-- Modal Cover Actions -->
+          <div class="profile-cover-actions position-absolute bottom-0 end-0 m-3 z-3" id="modal-cover-actions">
+            <div class="dropdown">
+              <button class="btn btn-sm glass-panel text-white border-0 rounded-pill px-3 py-1.5 shadow-sm d-flex align-items-center gap-2 hover-scale" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Cover Photo Options">
+                <i class="bi bi-camera-fill"></i>
+                <span class="small fw-semibold d-none d-sm-inline">Edit Cover</span>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end glass-dropdown border-0 shadow-lg py-1">
+                <li>
+                  <button type="button" class="dropdown-item d-flex align-items-center gap-2 small py-2" id="btn-modal-change-cover">
+                    <i class="bi bi-upload text-primary"></i> Change Cover Photo
+                  </button>
+                </li>
+                <li>
+                  <button type="button" class="dropdown-item d-flex align-items-center gap-2 small py-2" id="btn-modal-view-cover">
+                    <i class="bi bi-eye text-info"></i> View Cover Photo
+                  </button>
+                </li>
+                <li><hr class="dropdown-divider my-1"></li>
+                <li>
+                  <button type="button" class="dropdown-item d-flex align-items-center gap-2 small py-2 text-danger" id="btn-modal-remove-cover">
+                    <i class="bi bi-trash3 text-danger"></i> Remove Cover Photo
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <input type="file" id="modal-cover-file-input" accept="image/*" class="d-none">
+        </div>
+
+        <div class="modal-body p-4 pt-0">
+          <div class="d-flex flex-column flex-sm-row align-items-center align-items-sm-end justify-content-between mb-4 text-center text-sm-start">
+            <div class="d-flex flex-column flex-sm-row align-items-center align-items-sm-end gap-3">
+              <div class="profile-avatar-wrapper position-relative">
+                <img id="profile-avatar-img" src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=300&auto=format&fit=crop" alt="Profile" class="profile-avatar-large cursor-pointer" title="Click to view full photo">
+                <span class="profile-status-badge" title="Active Fellow"></span>
+                <!-- Modal Avatar Actions -->
+                <div class="profile-avatar-actions position-absolute bottom-0 end-0 z-3" id="modal-avatar-actions">
+                  <div class="dropdown">
+                    <button class="btn btn-sm btn-primary rounded-circle p-0 shadow border border-2 border-white d-flex align-items-center justify-content-center hover-scale" style="width: 32px; height: 32px;" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Change Profile Picture">
+                      <i class="bi bi-camera-fill fs-6"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-start glass-dropdown border-0 shadow-lg py-1">
+                      <li>
+                        <button type="button" class="dropdown-item d-flex align-items-center gap-2 small py-2" id="btn-modal-change-avatar">
+                          <i class="bi bi-person-bounding-box text-primary"></i> Change Profile Picture
+                        </button>
+                      </li>
+                      <li>
+                        <button type="button" class="dropdown-item d-flex align-items-center gap-2 small py-2" id="btn-modal-view-avatar">
+                          <i class="bi bi-eye text-info"></i> View Full Avatar
+                        </button>
+                      </li>
+                      <li><hr class="dropdown-divider my-1"></li>
+                      <li>
+                        <button type="button" class="dropdown-item d-flex align-items-center gap-2 small py-2 text-danger" id="btn-modal-remove-avatar">
+                          <i class="bi bi-trash3 text-danger"></i> Remove Profile Picture
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                <input type="file" id="modal-avatar-file-input" accept="image/*" class="d-none">
+              </div>
+              <div class="pb-sm-1">
+                <h3 id="profile-display-name" class="font-heading fw-bold mb-1">Alex Rivera</h3>
+                <div class="d-flex align-items-center justify-content-center justify-content-sm-start gap-2 flex-wrap">
+                  <span id="profile-display-role" class="badge bg-primary-subtle text-primary">Student Photographer</span>
+                  <span id="profile-display-dept" class="text-muted small"><i class="bi bi-mortarboard me-1"></i>Media Arts '27</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-3 mt-sm-0">
+              <button class="btn btn-outline-primary btn-sm rounded-pill px-3" id="edit-profile-btn">
+                <i class="bi bi-gear-fill me-1"></i> Edit Settings
+              </button>
+            </div>
+          </div>
+
+          <!-- Profile Nav Tabs -->
+          <ul class="nav nav-pills profile-nav-tabs mb-4" id="profileTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="overview-tab-btn" data-bs-toggle="tab" data-bs-target="#profile-overview" type="button" role="tab">
+                <i class="bi bi-person-badge me-1"></i> Overview
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="favorites-tab-btn" data-bs-toggle="tab" data-bs-target="#profile-favorites" type="button" role="tab">
+                <i class="bi bi-heart-fill me-1 text-danger"></i> Favorites (<span id="profile-fav-count">0</span>)
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="albums-tab-btn" data-bs-toggle="tab" data-bs-target="#profile-albums" type="button" role="tab">
+                <i class="bi bi-images me-1 text-primary"></i> My Albums (<span id="profile-album-count">0</span>)
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="settings-tab-btn" data-bs-toggle="tab" data-bs-target="#profile-settings" type="button" role="tab">
+                <i class="bi bi-sliders me-1"></i> Settings
+              </button>
+            </li>
+          </ul>
+
+          <!-- Tab Content -->
+          <div class="tab-content" id="profileTabsContent">
+            
+            <!-- 1. Overview Tab -->
+            <div class="tab-pane fade show active" id="profile-overview" role="tabpanel">
+              <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                  <div class="p-3 bg-body-tertiary rounded-3 text-center border">
+                    <div class="fs-3 fw-bold text-primary" id="stat-favs-given">0</div>
+                    <div class="extra-small text-muted text-uppercase">Liked Photos</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="p-3 bg-body-tertiary rounded-3 text-center border">
+                    <div class="fs-3 fw-bold text-success" id="stat-albums-uploaded">0</div>
+                    <div class="extra-small text-muted text-uppercase">My Albums</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="p-3 bg-body-tertiary rounded-3 text-center border">
+                    <div class="fs-3 fw-bold text-warning" id="stat-press-passes">1</div>
+                    <div class="extra-small text-muted text-uppercase">Press Passes</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="p-3 bg-body-tertiary rounded-3 text-center border">
+                    <div class="fs-3 fw-bold text-info">2026</div>
+                    <div class="extra-small text-muted text-uppercase">Member Since</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row g-4">
+                <div class="col-md-7">
+                  <div class="card border-0 bg-body-tertiary p-3 rounded-3 mb-3">
+                    <h6 class="fw-bold mb-2"><i class="bi bi-quote text-primary me-2"></i> Creator Bio</h6>
+                    <p id="profile-bio-text" class="text-muted small mb-0">
+                      Passionate about capturing high-energy campus sports, homecoming celebrations, and golden hour architecture.
+                    </p>
+                  </div>
+                  <div class="card border-0 bg-body-tertiary p-3 rounded-3">
+                    <h6 class="fw-bold mb-2"><i class="bi bi-camera me-2 text-primary"></i> Photography Equipment</h6>
+                    <div id="profile-gear-text" class="extra-small text-muted">
+                      <div>• Primary Body: Sony A7 IV RAW</div>
+                      <div>• Prime Lenses: 35mm f/1.4 GM, 85mm f/1.8</div>
+                      <div>• Color Grade Profile: Modern Teal & Amber</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-5">
+                  <div class="card border-0 bg-body-tertiary p-3 rounded-3 h-100">
+                    <h6 class="fw-bold mb-3"><i class="bi bi-info-circle me-2 text-primary"></i> Account Summary</h6>
+                    <div class="extra-small text-muted d-flex flex-column gap-2">
+                      <div class="d-flex justify-content-between border-bottom pb-2">
+                        <span>Email:</span>
+                        <strong id="profile-email-text" class="text-dark">alex.rivera@university.edu</strong>
+                      </div>
+                      <div class="d-flex justify-content-between border-bottom pb-2">
+                        <span>Role:</span>
+                        <strong class="text-dark">Student Creator</strong>
+                      </div>
+                      <div class="d-flex justify-content-between border-bottom pb-2">
+                        <span>Verification Status:</span>
+                        <span class="badge bg-success-subtle text-success"><i class="bi bi-check-circle-fill"></i> Verified University Press</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. Favorites Tab -->
+            <div class="tab-pane fade" id="profile-favorites" role="tabpanel">
+              <div id="favorites-grid" class="row g-3">
+                <!-- Dynamically populated favorites cards -->
+              </div>
+            </div>
+
+            <!-- 3. My Albums Tab -->
+            <div class="tab-pane fade" id="profile-albums" role="tabpanel">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <h6 class="fw-bold mb-0">Your Published Media & Albums</h6>
+                <button class="btn btn-gradient btn-sm" data-bs-toggle="modal" data-bs-target="#uploadAlbumModal">
+                  <i class="bi bi-plus-lg me-1"></i> Upload New Media
+                </button>
+              </div>
+
+              <div id="user-albums-grid" class="row g-3">
+                <!-- Dynamically populated albums cards -->
+              </div>
+            </div>
+
+            <!-- 4. Settings Tab -->
+            <div class="tab-pane fade" id="profile-settings" role="tabpanel">
+              <form id="profile-settings-form" class="p-2">
+                <div class="row g-3 mb-3">
+                  <div class="col-md-6">
+                    <label class="form-label extra-small fw-semibold">Full Name</label>
+                    <input type="text" id="settingName" class="form-control form-control-sm" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label extra-small fw-semibold">Department / Major</label>
+                    <input type="text" id="settingDept" class="form-control form-control-sm">
+                  </div>
+                  <div class="col-md-12">
+                    <label class="form-label extra-small fw-semibold">Profile Avatar URL</label>
+                    <input type="url" id="settingAvatar" class="form-control form-control-sm" placeholder="https://images.unsplash.com/...">
+                  </div>
+                  <div class="col-md-12">
+                    <label class="form-label extra-small fw-semibold">Bio</label>
+                    <textarea id="settingBio" class="form-control form-control-sm" rows="3"></textarea>
+                  </div>
+                  <div class="col-md-12">
+                    <label class="form-label extra-small fw-semibold">Camera Equipment</label>
+                    <input type="text" id="settingGear" class="form-control form-control-sm" placeholder="e.g. Sony A7 IV, 35mm f/1.4">
+                  </div>
+                </div>
+
+                <hr class="my-4">
+
+                <h6 class="fw-bold mb-3"><i class="bi bi-shield-lock me-1"></i> Security & Password</h6>
+                <div class="row g-3 mb-4">
+                  <div class="col-md-6">
+                    <label class="form-label extra-small fw-semibold">New Password</label>
+                    <input type="password" id="settingNewPass" class="form-control form-control-sm" placeholder="Leave blank to keep unchanged">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label extra-small fw-semibold">Confirm New Password</label>
+                    <input type="password" id="settingConfirmPass" class="form-control form-control-sm" placeholder="Confirm new password">
+                  </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                  <button type="submit" class="btn btn-gradient btn-sm px-4">
+                    <i class="bi bi-floppy-fill me-1"></i> Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload Photo / Create Album Modal -->
+  <div class="modal fade" id="uploadAlbumModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content glass-panel border-0 text-dark">
+        <div class="modal-header border-bottom">
+          <div>
+            <h5 class="modal-title font-heading fw-bold mb-0">
+              <i class="bi bi-images text-primary me-2"></i> Submit Photos & Create Department Album
+            </h5>
+            <p class="text-muted extra-small mb-0 mt-1">Upload multiple photos for CSE Department, Law Department, EEE Department, BBA Department, English Department, or other departments</p>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <form id="upload-album-form">
+
+            <!-- Submission Mode Toggle -->
+            <div class="p-2 bg-light rounded-3 border mb-3 d-flex justify-content-center gap-2">
+              <input type="radio" class="btn-check" name="uploadTypeMode" id="modeSinglePhoto" value="single" checked>
+              <label class="btn btn-outline-primary btn-sm px-3 flex-grow-1 fw-semibold" for="modeSinglePhoto">
+                <i class="bi bi-image me-1"></i> Single Photo
+              </label>
+
+              <input type="radio" class="btn-check" name="uploadTypeMode" id="modeMultiAlbum" value="album">
+              <label class="btn btn-outline-primary btn-sm px-3 flex-grow-1 fw-semibold" for="modeMultiAlbum">
+                <i class="bi bi-journal-album me-1"></i> Department Album (Multi-Photos)
+              </label>
+            </div>
+
+            <!-- Dropzone / File Picker Section -->
+            <div class="mb-3">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label extra-small fw-semibold mb-0" id="fileUploadLabel">Upload Photos from Device</label>
+                <span class="badge bg-primary-subtle text-primary extra-small" id="albumPhotoCountBadge">0 Photos Selected</span>
+              </div>
+              <input type="file" id="uploadFileInput" accept="image/*" multiple class="d-none">
+              <div id="uploadDropZone" class="p-4 text-center border border-2 border-dashed rounded-3 bg-light cursor-pointer transition-all hover-shadow">
+                <i class="bi bi-cloud-arrow-up-fill text-primary display-5 mb-2"></i>
+                <div class="fw-bold small" id="dropzoneTitle">Click or Drag & Drop Photos Here</div>
+                <div class="extra-small text-muted" id="dropzoneSubtitle">Select 1 or multiple photos (JPG, PNG, WEBP) for your department album</div>
+              </div>
+            </div>
+
+            <!-- Multi Image Thumbnails Preview Grid -->
+            <div id="uploadAlbumPreviewContainer" class="d-none mb-3">
+              <div class="p-3 border rounded-3 bg-body-tertiary">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="extra-small fw-bold text-uppercase tracking-wider text-muted">Selected Album Images</span>
+                  <button type="button" id="clearAllAlbumImagesBtn" class="btn btn-outline-danger btn-xs">
+                    <i class="bi bi-trash me-1"></i> Clear All
+                  </button>
+                </div>
+                <div id="uploadAlbumThumbnailsGrid" class="row g-2">
+                  <!-- Dynamic Image Thumbnails render here -->
+                </div>
+              </div>
+            </div>
+
+            <div class="d-flex align-items-center my-3">
+              <hr class="flex-grow-1 my-0 border-secondary-subtle">
+              <span class="px-2 extra-small text-muted text-uppercase fw-bold">OR Add Image Direct Link / Unsplash URL</span>
+              <hr class="flex-grow-1 my-0 border-secondary-subtle">
+            </div>
+
+            <div class="mb-3">
+              <div class="input-group">
+                <input type="url" id="uploadImgUrl" class="form-control" placeholder="https://images.unsplash.com/photo-...">
+                <button type="button" id="addUrlToAlbumBtn" class="btn btn-outline-primary btn-sm fw-semibold">
+                  <i class="bi bi-plus-circle me-1"></i> Add to Album
+                </button>
+              </div>
+              <div class="extra-small text-muted mt-1">Or click preset photos to add them instantly:</div>
+            </div>
+
+            <!-- Quick Unsplash Presets -->
+            <div class="d-flex gap-2 mb-3 overflow-x-auto pb-2">
+              <button type="button" class="btn btn-outline-secondary btn-xs text-nowrap upload-preset-btn" data-url="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=800">
+                💻 CSE Hackathon
+              </button>
+              <button type="button" class="btn btn-outline-secondary btn-xs text-nowrap upload-preset-btn" data-url="https://images.unsplash.com/photo-1589829545856-d10d557cf95f?q=80&w=800">
+                ⚖️ Law Moot
+              </button>
+              <button type="button" class="btn btn-outline-secondary btn-xs text-nowrap upload-preset-btn" data-url="https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?q=80&w=800">
+                ⚡ EEE Lab
+              </button>
+              <button type="button" class="btn btn-outline-secondary btn-xs text-nowrap upload-preset-btn" data-url="https://images.unsplash.com/photo-1515187029135-18ee286d815b?q=80&w=800">
+                💼 BBA Pitch
+              </button>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label for="uploadTitle" class="form-label extra-small fw-semibold">Album or Photo Title *</label>
+                <input type="text" id="uploadTitle" class="form-control" placeholder="e.g. CSE Fest 2026 or Spring Law Debate" required>
+              </div>
+              <div class="col-md-6">
+                <label for="uploadCategory" class="form-label extra-small fw-semibold">Department / Category *</label>
+                <select id="uploadCategory" class="form-select" required>
+                  <option value="CSE">CSE Department</option>
+                  <option value="eee">EEE Department</option>
+                  <option value="law">Law Department</option>
+                  <option value="bba">BBA Department</option>
+                  <option value="english">English Department</option>
+                  <option value="university_events">University events</option>
+                  <option value="campus">Campus Life</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label for="uploadAuthor" class="form-label extra-small fw-semibold">Photographer / Creator Name</label>
+                <input type="text" id="uploadAuthor" class="form-control" placeholder="Your Name or Student Handle">
+              </div>
+              <div class="col-md-6">
+                <label for="uploadLocation" class="form-label extra-small fw-semibold">Location</label>
+                <input type="text" id="uploadLocation" class="form-control" placeholder="e.g. CSE Auditorium, Law Moot Court">
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label for="uploadDescription" class="form-label extra-small fw-semibold">Album Description / Story</label>
+              <textarea id="uploadDescription" class="form-control" rows="2" placeholder="Tell us about this programme, event, or collection..."></textarea>
+            </div>
+
+            <button type="submit" id="submit-upload-btn" class="btn btn-gradient w-100 py-2.5 fw-semibold fs-6 shadow-sm">
+              <i class="bi bi-journal-arrow-up me-1"></i> Publish Album to Featured Memories
+            </button>
+            <div class="upload-approval-notice mt-2.5 p-2.5 px-3 rounded-3 bg-body-tertiary border border-secondary-subtle d-flex align-items-center gap-2 extra-small text-muted shadow-sm">
+              <i class="bi bi-info-circle-fill text-warning flex-shrink-0"></i>
+              <span>📝 All submissions are reviewed by administrators before being published to the public gallery.</span>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Edit Memory Modal -->
+  <div class="modal fade" id="adminEditMemoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content glass-panel p-2">
+        <div class="modal-header border-bottom border-secondary-subtle pb-3">
+          <h5 class="modal-title font-heading fw-bold d-flex align-items-center gap-2">
+            <i class="bi bi-pencil-square text-warning fs-4"></i> Edit Memory Details
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body pt-3">
+          <form id="admin-edit-memory-form">
+            <input type="hidden" id="editMemoryId">
+            <div class="row g-3 mb-3">
+              <div class="col-md-8">
+                <label class="form-label extra-small fw-semibold">Title *</label>
+                <input type="text" id="editMemoryTitle" class="form-control" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label extra-small fw-semibold">Category / Department *</label>
+                <select id="editMemoryCategory" class="form-select" required>
+                  <option value="CSE">CSE Department</option>
+                  <option value="eee">EEE Department</option>
+                  <option value="law">Law Department</option>
+                  <option value="bba">BBA Department</option>
+                  <option value="english">English Department</option>
+                  <option value="university_events">University events</option>
+                  <option value="campus">Campus Life</option>
+                </select>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label extra-small fw-semibold">Main Cover Image URL *</label>
+              <input type="url" id="editMemoryImgUrl" class="form-control" required>
+            </div>
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label extra-small fw-semibold">Photographer Name</label>
+                <input type="text" id="editMemoryAuthor" class="form-control">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label extra-small fw-semibold">Location</label>
+                <input type="text" id="editMemoryLocation" class="form-control">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label extra-small fw-semibold">Description / Story</label>
+              <textarea id="editMemoryDesc" class="form-control" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-warning w-100 py-2.5 fw-semibold text-dark">
+              <i class="bi bi-check-circle-fill me-1"></i> Update Memory Details
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Delete Confirmation Modal -->
+  <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content glass-panel border-0 shadow-lg text-dark">
+        <div class="modal-header border-bottom py-2.5">
+          <h5 class="modal-title font-heading fw-bold fs-6 text-danger d-flex align-items-center gap-2 mb-0" id="deleteConfirmModalLabel">
+            <i class="bi bi-trash-fill"></i> Delete Item
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body py-3">
+          <p class="mb-0 text-secondary small" id="deleteConfirmModalMessage">
+            Are you sure you want to delete this item? This action cannot be undone.
+          </p>
+        </div>
+        <div class="modal-footer border-top p-2.5 d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-light btn-sm px-3 rounded-pill text-dark" data-bs-dismiss="modal" id="deleteConfirmModalCancelBtn">Cancel</button>
+          <button type="button" class="btn btn-danger btn-sm px-3 rounded-pill fw-semibold shadow-sm" id="deleteConfirmModalConfirmBtn">
+            <i class="bi bi-trash-fill me-1"></i> Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fullscreen Photo / Album Viewer Overlay -->
+  <div id="fullscreenPhotoOverlay" class="position-fixed top-0 start-0 w-100 h-100 bg-black bg-opacity-95 d-none flex-column justify-content-between z-max p-3 p-md-4 transition-all">
+    <!-- Top Bar -->
+    <div class="d-flex align-items-center justify-content-between text-white z-3">
+      <div class="d-flex align-items-center gap-2 gap-md-3">
+        <h6 class="font-heading fw-bold text-white mb-0 fs-5 text-truncate" style="max-width: 320px;" id="fsOverlayTitle">Campus Memory</h6>
+        <span class="badge bg-dark border border-secondary text-white-50 extra-small rounded-pill px-3" id="fsOverlayCounter">1 / 1</span>
+        <span class="badge bg-secondary bg-opacity-50 text-white extra-small rounded-pill" id="fsOverlayRatioBadge"><i class="bi bi-aspect-ratio me-1"></i> Original Ratio</span>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-outline-light btn-sm rounded-pill px-3 extra-small d-none d-sm-inline-flex align-items-center gap-1" id="fsOverlayFitToggle" title="Toggle Aspect Fit / Fill">
+          <i class="bi bi-aspect-ratio me-1"></i> <span id="fsOverlayFitText">Fit Original Ratio</span>
+        </button>
+        <button type="button" class="btn btn-light btn-sm rounded-circle d-flex align-items-center justify-content-center shadow" id="fsOverlayCloseBtn" style="width: 40px; height: 40px;" title="Exit Fullscreen (Esc)">
+          <i class="bi bi-x-lg fs-5 text-dark"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Center Stage Image Container matching aspect ratio -->
+    <div class="flex-fill d-flex align-items-center justify-content-center position-relative my-2 overflow-hidden" id="fsOverlayStage">
+      <!-- Prev Arrow -->
+      <button type="button" id="fsOverlayPrevBtn" class="btn btn-dark btn-lg rounded-circle position-absolute start-0 top-50 translate-middle-y ms-2 ms-md-4 z-3 d-none shadow opacity-85 hover-opacity-100" style="width: 54px; height: 54px;">
+        <i class="bi bi-chevron-left fs-3"></i>
+      </button>
+
+      <!-- Fullscreen Main Image -->
+      <img id="fsOverlayImg" src="" alt="Fullscreen view" class="img-fluid rounded-3 shadow-2xl transition-all" style="max-height: 82vh; max-width: 92vw; object-fit: contain;">
+
+      <!-- Next Arrow -->
+      <button type="button" id="fsOverlayNextBtn" class="btn btn-dark btn-lg rounded-circle position-absolute end-0 top-50 translate-middle-y me-2 me-md-4 z-3 d-none shadow opacity-85 hover-opacity-100" style="width: 54px; height: 54px;">
+        <i class="bi bi-chevron-right fs-3"></i>
+      </button>
+    </div>
+
+    <!-- Bottom Thumbnail Ribbon & Footer Details -->
+    <div class="w-100 d-flex flex-column align-items-center gap-2 text-white-50 extra-small z-3">
+      <div id="fsOverlayThumbsRibbon" class="d-flex justify-content-center gap-2 overflow-x-auto w-100 px-2 py-1">
+        <!-- Thumbnails for fullscreen album navigation -->
+      </div>
+      <div class="text-center text-white-50 extra-small">
+        <span id="fsOverlayAuthorText" class="text-white fw-semibold me-2">Photographer</span> • <span id="fsOverlayLocationText">Location</span> • Press <kbd class="bg-dark text-white border border-secondary px-1.5 rounded">Esc</kbd> or <kbd class="bg-dark text-white border border-secondary px-1.5 rounded">F</kbd> to exit fullscreen
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap 5.3 JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- AOS JS -->
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  
+  <!-- Application Main JS Script -->
+  <script type="module" src="/src/js/main.js"></script>
+</body>
+</html>

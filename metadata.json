@@ -1,0 +1,6 @@
+{
+  "name": "MULens",
+  "description": "Premium Campus Photography & Media SaaS Showcase Platform",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
