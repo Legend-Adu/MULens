@@ -70,6 +70,34 @@ class ImageStoreDB {
     }
   }
 
+  // Convert Blob object to Base64 dataURL
+  blobToDataURL(blob) {
+    if (!blob || !(blob instanceof Blob)) return Promise.resolve(null);
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  // Get raw Blob record by key from STORE_BLOBS
+  async getBlob(key) {
+    if (!key || typeof key !== 'string') return null;
+    if (!this.db) await this.init();
+    return new Promise((resolve) => {
+      try {
+        const tx = this.db.transaction([STORE_BLOBS], 'readonly');
+        const store = tx.objectStore(STORE_BLOBS);
+        const req = store.get(key);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => resolve(null);
+      } catch (e) {
+        resolve(null);
+      }
+    });
+  }
+
   // Save image blob or file into IndexedDB and return its blob key
   async saveBlob(blobOrFile, customKey = null, aspectRatio = null) {
     if (!this.db) await this.init();

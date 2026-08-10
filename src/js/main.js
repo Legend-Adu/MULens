@@ -5,20 +5,84 @@
 
 import * as MULensData from '../data.ts';
 import { imageStoreDB } from './idb.js';
+import {
+  initSupabase,
+  fetchMemoriesFromSupabase,
+  saveMemoryToSupabase,
+  updateMemoryStatusInSupabase,
+  deleteMemoryFromSupabase,
+  uploadMediaToSupabase,
+  migrateIndexedDBToSupabase,
+  cachedCloudMemories,
+  isSupabaseConnected
+} from './supabase.js';
 
-// Helper to format/normalize image URLs (e.g. converting imgur page links to direct image links)
+// Central helper to retrieve all combined memories from Supabase Cloud + IndexedDB + Base Data
+function getAllMemoriesCombined() {
+  const cloudMemories = cachedCloudMemories || [];
+  const customMemories = imageStoreDB.cachedMemories || [];
+  const deletedMemoryIds = JSON.parse(localStorage.getItem('campuslens_deleted_memories') || '[]');
+  const modifiedMemoriesMap = JSON.parse(localStorage.getItem('campuslens_modified_memories') || '{}');
+
+  let baseMemories = (MULensData && Array.isArray(MULensData.FEATURED_MEMORIES)) ? MULensData.FEATURED_MEMORIES : [];
+  baseMemories = baseMemories.map(bm => {
+    if (modifiedMemoriesMap[bm.id]) {
+      return { ...bm, ...modifiedMemoriesMap[bm.id] };
+    }
+    return bm;
+  });
+
+  let combined = [...cloudMemories];
+
+  // Merge IndexedDB memories if not already in cloudMemories
+  customMemories.forEach(cm => {
+    if (!combined.some(m => String(m.id) === String(cm.id))) {
+      combined.push(cm);
+    }
+  });
+
+  // Merge base sample memories if not already in combined
+  baseMemories.forEach(bm => {
+    if (!combined.some(m => String(m.id) === String(bm.id))) {
+      combined.push(bm);
+    }
+  });
+
+  // Exclude deleted memory IDs
+  return combined.filter(m => !deletedMemoryIds.includes(m.id) && !deletedMemoryIds.includes(String(m.id)));
+}
+
+// Helper to format/normalize image URLs
 function normalizeImgUrl(url) {
   if (!url) return '';
-  let formatted = url.trim();
-  if (formatted.includes('imgur.com/') && !formatted.includes('i.imgur.com/')) {
-    const id = formatted.split('imgur.com/')[1].split('/')[0].split('?')[0].split('#')[0];
+
+  let formatted = String(url).trim();
+
+  // Handle Markdown links:
+  // [https://example.com/image.jpg](https://example.com/image.jpg)
+  const markdownMatch = formatted.match(/^\[.*?\]\((https?:\/\/[^)]+)\)$/);
+  if (markdownMatch) {
+    formatted = markdownMatch[1];
+  }
+
+  // Handle Imgur page URLs and convert them to direct image URLs
+  if (
+    formatted.includes('imgur.com/') &&
+    !formatted.includes('i.imgur.com/')
+  ) {
+    const id = formatted
+      .split('imgur.com/')[1]
+      .split('/')[0]
+      .split('?')[0]
+      .split('#')[0];
+
     if (id && !id.includes('.')) {
       formatted = `https://i.imgur.com/${id}.jpeg`;
     }
   }
+
   return formatted;
 }
-
 // Expose central data store globally so manually editing /src/data.ts updates the application
 if (typeof window !== 'undefined') {
   window.MULENS_DATA = MULensData;
@@ -27,6 +91,10 @@ if (typeof window !== 'undefined') {
 document.addEventListener('DOMContentLoaded', async () => {
   // Initialize IndexedDB storage engine for media files & custom memories
   await imageStoreDB.init();
+
+  // Initialize Supabase Cloud Storage & Database connection
+  await initSupabase();
+  await fetchMemoriesFromSupabase();
   // --------------------------------------------------------------------------
   // 1. Initial Data Setup (LocalStorage)
   // --------------------------------------------------------------------------
@@ -234,27 +302,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const userIdStr = String(user.id || '');
     const userNameLower = (user.name || '').toLowerCase();
 
-    const customMemories = imageStoreDB.cachedMemories || [];
-    const deletedMemoryIds = JSON.parse(localStorage.getItem('campuslens_deleted_memories') || '[]');
-    const modifiedMemoriesMap = JSON.parse(localStorage.getItem('campuslens_modified_memories') || '{}');
-
-    let baseMemories = (MULensData && Array.isArray(MULensData.FEATURED_MEMORIES)) ? MULensData.FEATURED_MEMORIES : [];
-    baseMemories = baseMemories.map(bm => {
-      if (modifiedMemoriesMap[bm.id]) {
-        return { ...bm, ...modifiedMemoriesMap[bm.id] };
-      }
-      return bm;
-    });
-
-    let allMemories = [...customMemories];
-    baseMemories.forEach(bm => {
-      if (!allMemories.some(m => String(m.id) === String(bm.id))) {
-        allMemories.push(bm);
-      }
-    });
-
-    // Exclude deleted memories
-    allMemories = allMemories.filter(m => !deletedMemoryIds.includes(m.id) && !deletedMemoryIds.includes(String(m.id)));
+    const allMemories = getAllMemoriesCombined();
 
     // Return memories uploaded by this user
     return allMemories.filter(m => {
@@ -286,14 +334,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function approveMemorySubmission(memId) {
     const memIdStr = String(memId);
+    const currentUser = getCurrentUser();
+    const approvedBy = currentUser ? (currentUser.name || currentUser.id) : 'Admin';
+
+    // 1. Update status in Supabase Database
+    await updateMemoryStatusInSupabase(memIdStr, 'approved', approvedBy);
+
+    // 2. Update status in IndexedDB
     const customMemories = imageStoreDB.cachedMemories || [];
     const targetMem = customMemories.find(m => String(m.id) === memIdStr);
     
     if (targetMem) {
       targetMem.status = 'approved';
       targetMem.approvedAt = Date.now();
-      const currentUser = getCurrentUser();
-      targetMem.approvedBy = currentUser ? (currentUser.id || currentUser.name) : 'Admin';
+      targetMem.approvedBy = approvedBy;
       await imageStoreDB.saveMemory(targetMem);
     } else {
       const modifiedMap = JSON.parse(localStorage.getItem('campuslens_modified_memories') || '{}');
@@ -304,8 +358,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    showToast('🟢 Your submission has been approved and is now public.', 'success');
+    showToast('🟢 Submission approved and published globally to Supabase!', 'success');
 
+    await fetchMemoriesFromSupabase();
     await imageStoreDB.reloadMemoryCache();
     renderDynamicDataFromDataTS();
     renderAdminSpaceView();
@@ -315,6 +370,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function rejectMemorySubmission(memId) {
     const memIdStr = String(memId);
+
+    // 1. Update status in Supabase Database
+    await updateMemoryStatusInSupabase(memIdStr, 'rejected');
+
+    // 2. Update status in IndexedDB
     const customMemories = imageStoreDB.cachedMemories || [];
     const targetMem = customMemories.find(m => String(m.id) === memIdStr);
 
@@ -329,8 +389,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    showToast('🔴 Your submission was not approved.', 'danger');
+    showToast('🔴 Submission rejected.', 'danger');
 
+    await fetchMemoriesFromSupabase();
     await imageStoreDB.reloadMemoryCache();
     renderDynamicDataFromDataTS();
     renderAdminSpaceView();
@@ -1846,33 +1907,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // D. Render Featured Campus Memories Masonry Grid
-    const customMemories = imageStoreDB.cachedMemories || [];
-    const deletedMemoryIds = JSON.parse(localStorage.getItem('campuslens_deleted_memories') || '[]');
-    const modifiedMemoriesMap = JSON.parse(localStorage.getItem('campuslens_modified_memories') || '{}');
-
-    let baseMemories = Array.isArray(MULensData.FEATURED_MEMORIES) ? MULensData.FEATURED_MEMORIES : [];
-    baseMemories = baseMemories.map(bm => {
-      if (modifiedMemoriesMap[bm.id]) {
-        return {
-          ...bm,
-          ...modifiedMemoriesMap[bm.id]
-        };
-      }
-      return bm;
-    });
-
-    let allMemories = [...baseMemories];
-
-    if (customMemories.length > 0) {
-      customMemories.forEach(cm => {
-        if (!allMemories.some(m => m.id === cm.id)) {
-          allMemories.unshift(cm);
-        }
-      });
-    }
-
-    // Filter out deleted memories
-    allMemories = allMemories.filter(m => !deletedMemoryIds.includes(m.id));
+    let allMemories = getAllMemoriesCombined();
 
     // Public Gallery Filter: Only display approved memories (or default sample memories without status)
     const publicMemories = allMemories.filter(m => !m.status || m.status === 'approved');
@@ -2098,9 +2133,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const memIdStr = String(memId);
-    let customMemories = imageStoreDB.cachedMemories || [];
-    let baseMemories = (MULensData && Array.isArray(MULensData.FEATURED_MEMORIES)) ? MULensData.FEATURED_MEMORIES : [];
-    let allMemories = [...customMemories, ...baseMemories];
+    let allMemories = getAllMemoriesCombined();
     const memToDelete = allMemories.find(m => String(m.id) === memIdStr || m.id === memId);
 
     if (memToDelete && !canDeleteMemory(memToDelete)) {
@@ -2108,7 +2141,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // 1. Remove from IndexedDB
+    // 1. Remove from Supabase Cloud DB & Storage bucket
+    await deleteMemoryFromSupabase(memIdStr);
+
+    // 2. Remove from IndexedDB
     await imageStoreDB.deleteMemory(memIdStr);
 
     // 2. Add to campuslens_deleted_memories in localStorage
@@ -3714,7 +3750,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      showToast('Saving photos safely to IndexedDB...', 'info');
+      showToast('Uploading photos to Supabase Cloud Storage...', 'info');
 
       const imageKeys = [];
       const resolvedUrls = [];
@@ -3724,17 +3760,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         let source = typeof item === 'string' ? item : (item.blob || item.file || item.url);
         const aspect = (item && typeof item === 'object') ? item.aspectRatio : null;
 
-        if (typeof source === 'string' && (source.startsWith('http://') || source.startsWith('https://'))) {
-          imageKeys.push(source);
-          resolvedUrls.push(source);
-        } else {
-          const blobKey = await imageStoreDB.saveBlob(source, null, aspect);
-          if (blobKey) {
-            imageKeys.push(blobKey);
-            const liveUrl = imageStoreDB.getUrlForBlobKey(blobKey);
-            resolvedUrls.push(liveUrl || blobKey);
-          }
+        // 1. Upload to Supabase Cloud Storage bucket 'mulens-media'
+        const cloudUrl = await uploadMediaToSupabase(source, 'memories');
+
+        // 2. Also save locally in IndexedDB as fallback
+        let blobKey = null;
+        if (!(typeof source === 'string' && (source.startsWith('http://') || source.startsWith('https://')))) {
+          blobKey = await imageStoreDB.saveBlob(source, null, aspect);
         }
+
+        if (blobKey) imageKeys.push(blobKey);
+
+        const finalUrl = cloudUrl || (blobKey ? imageStoreDB.getUrlForBlobKey(blobKey) : source);
+        resolvedUrls.push(finalUrl);
       }
 
       const mainImageUrl = resolvedUrls[0] || '';
@@ -3808,8 +3846,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         tags: [category, 'UserUpload', resolvedUrls.length > 1 ? 'Album' : 'Photo']
       };
 
-      // Save custom uploaded memory in IndexedDB
+      // Save custom uploaded memory in Supabase Cloud Database
+      await saveMemoryToSupabase(newMemory);
+
+      // Save custom uploaded memory in IndexedDB as fallback
       await imageStoreDB.saveMemory(newMemory);
+
+      // Refresh cloud memories cache
+      await fetchMemoriesFromSupabase();
 
       // Sync with Logged-in User Albums if user is signed in
       if (currentUser) {
@@ -3956,20 +4000,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (potwQuoteInput) potwQuoteInput.value = activePotw.description || '';
 
     // 2. Load all active gallery items
-    const customMemories = imageStoreDB.cachedMemories || [];
-    const deletedMemoryIds = JSON.parse(localStorage.getItem('campuslens_deleted_memories') || '[]');
-    const modifiedMemoriesMap = JSON.parse(localStorage.getItem('campuslens_modified_memories') || '{}');
-
-    let baseMemories = (window.MULensData && Array.isArray(window.MULensData.FEATURED_MEMORIES)) ? window.MULensData.FEATURED_MEMORIES : [];
-    baseMemories = baseMemories.map(bm => modifiedMemoriesMap[bm.id] ? { ...bm, ...modifiedMemoriesMap[bm.id] } : bm);
-
-    let allMemories = [...baseMemories];
-    customMemories.forEach(cm => {
-      if (!allMemories.some(m => m.id === cm.id)) {
-        allMemories.unshift(cm);
-      }
-    });
-    allMemories = allMemories.filter(m => !deletedMemoryIds.includes(m.id));
+    let allMemories = getAllMemoriesCombined();
 
     // Populate Quick Select Memory dropdown
     const potwSelect = document.getElementById('admin-potw-select-memory');
@@ -4589,6 +4620,81 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
 
         reader.readAsText(file);
+      };
+    }
+
+    // 8. Supabase Cloud Sync & Migration Button Listener
+    const syncSupabaseBtn = document.getElementById('admin-sync-supabase-btn');
+    if (syncSupabaseBtn) {
+      const executeMigration = async (adminSecretKey) => {
+        try {
+          syncSupabaseBtn.disabled = true;
+          syncSupabaseBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status"></span> Syncing to Supabase...`;
+          showToast('☁️ Starting migration of local IndexedDB data to Supabase Cloud Storage & Database...', 'info');
+
+          const result = await migrateIndexedDBToSupabase((current, total, title) => {
+            showToast(`Syncing memory [${current}/${total}]: ${title}`, 'info');
+          }, adminSecretKey);
+
+          if (result.success) {
+            showToast(`🟢 ${result.message}`, 'success');
+            await fetchMemoriesFromSupabase();
+            renderDynamicDataFromDataTS();
+            renderAdminSpaceView();
+            renderProfileView();
+            renderProfileTabs();
+          } else {
+            showToast(`🔴 Migration warning: ${result.message}`, 'danger');
+          }
+        } catch (err) {
+          console.error('[Supabase Migration Error]:', err.message || 'Error occurred');
+          showToast(`🔴 Failed to sync data to Supabase: ${err.message || 'Error occurred'}`, 'danger');
+        } finally {
+          syncSupabaseBtn.disabled = false;
+          syncSupabaseBtn.innerHTML = `<i class="bi bi-cloud-upload-fill fs-6"></i> ☁️ Sync Local Data to Supabase`;
+        }
+      };
+
+      syncSupabaseBtn.onclick = () => {
+        const storedSecret = sessionStorage.getItem('mulens_admin_secret');
+        const adminModalEl = document.getElementById('adminVerificationModal');
+        const secretInput = document.getElementById('adminSecretKeyInput');
+        const errorAlert = document.getElementById('adminVerificationError');
+        const formEl = document.getElementById('admin-verification-form');
+        const submitBtn = document.getElementById('adminVerificationSubmitBtn');
+
+        if (!adminModalEl) {
+          executeMigration(storedSecret || '');
+          return;
+        }
+
+        const modalInstance = (window.bootstrap && bootstrap.Modal)
+          ? bootstrap.Modal.getOrCreateInstance(adminModalEl)
+          : null;
+
+        if (secretInput) secretInput.value = storedSecret || '';
+        if (errorAlert) errorAlert.classList.add('d-none');
+
+        const handleConfirm = async (e) => {
+          if (e) e.preventDefault();
+          const enteredSecret = secretInput ? secretInput.value.trim() : '';
+          if (enteredSecret) {
+            sessionStorage.setItem('mulens_admin_secret', enteredSecret);
+          }
+          if (modalInstance) {
+            modalInstance.hide();
+          }
+          await executeMigration(enteredSecret);
+        };
+
+        if (formEl) formEl.onsubmit = handleConfirm;
+        if (submitBtn) submitBtn.onclick = handleConfirm;
+
+        if (modalInstance) {
+          modalInstance.show();
+        } else {
+          executeMigration(storedSecret || '');
+        }
       };
     }
   }
