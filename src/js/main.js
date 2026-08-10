@@ -5,20 +5,86 @@
 
 import * as MULensData from '../data.ts';
 import { imageStoreDB } from './idb.js';
+import {
+  initSupabase,
+  fetchMemoriesFromSupabase,
+  fetchPOTWFromSupabase,
+  setPOTWOnServer,
+  saveMemoryToSupabase,
+  updateMemoryStatusInSupabase,
+  deleteMemoryFromSupabase,
+  uploadMediaToSupabase,
+  migrateIndexedDBToSupabase,
+  cachedCloudMemories,
+  isSupabaseConnected
+} from './supabase.js';
 
-// Helper to format/normalize image URLs (e.g. converting imgur page links to direct image links)
+// Central helper to retrieve all combined memories from Supabase Cloud + IndexedDB + Base Data
+function getAllMemoriesCombined() {
+  const cloudMemories = cachedCloudMemories || [];
+  const customMemories = imageStoreDB.cachedMemories || [];
+  const deletedMemoryIds = JSON.parse(localStorage.getItem('campuslens_deleted_memories') || '[]');
+  const modifiedMemoriesMap = JSON.parse(localStorage.getItem('campuslens_modified_memories') || '{}');
+
+  let baseMemories = (MULensData && Array.isArray(MULensData.FEATURED_MEMORIES)) ? MULensData.FEATURED_MEMORIES : [];
+  baseMemories = baseMemories.map(bm => {
+    if (modifiedMemoriesMap[bm.id]) {
+      return { ...bm, ...modifiedMemoriesMap[bm.id] };
+    }
+    return bm;
+  });
+
+  let combined = [...cloudMemories];
+
+  // Merge IndexedDB memories if not already in cloudMemories
+  customMemories.forEach(cm => {
+    if (!combined.some(m => String(m.id) === String(cm.id))) {
+      combined.push(cm);
+    }
+  });
+
+  // Merge base sample memories if not already in combined
+  baseMemories.forEach(bm => {
+    if (!combined.some(m => String(m.id) === String(bm.id))) {
+      combined.push(bm);
+    }
+  });
+
+  // Exclude deleted memory IDs
+  return combined.filter(m => !deletedMemoryIds.includes(m.id) && !deletedMemoryIds.includes(String(m.id)));
+}
+
+// Helper to format/normalize image URLs
 function normalizeImgUrl(url) {
   if (!url) return '';
-  let formatted = url.trim();
-  if (formatted.includes('imgur.com/') && !formatted.includes('i.imgur.com/')) {
-    const id = formatted.split('imgur.com/')[1].split('/')[0].split('?')[0].split('#')[0];
+
+  let formatted = String(url).trim();
+
+  // Handle Markdown links:
+  // [https://example.com/image.jpg](https://example.com/image.jpg)
+  const markdownMatch = formatted.match(/^\[.*?\]\((https?:\/\/[^)]+)\)$/);
+  if (markdownMatch) {
+    formatted = markdownMatch[1];
+  }
+
+  // Handle Imgur page URLs and convert them to direct image URLs
+  if (
+    formatted.includes('imgur.com/') &&
+    !formatted.includes('i.imgur.com/')
+  ) {
+    const id = formatted
+      .split('imgur.com/')[1]
+      .split('/')[0]
+      .split('?')[0]
+      .split('#')[0];
+
     if (id && !id.includes('.')) {
       formatted = `https://i.imgur.com/${id}.jpeg`;
     }
   }
+
   return formatted;
 }
-
 // Expose central data store globally so manually editing /src/data.ts updates the application
 if (typeof window !== 'undefined') {
   window.MULENS_DATA = MULensData;
@@ -27,6 +93,16 @@ if (typeof window !== 'undefined') {
 document.addEventListener('DOMContentLoaded', async () => {
   // Initialize IndexedDB storage engine for media files & custom memories
   await imageStoreDB.init();
+
+  // Initialize Supabase Cloud Storage & Database connection
+  await initSupabase();
+  await fetchMemoriesFromSupabase();
+  try {
+    const potw = await fetchPOTWFromSupabase();
+    window.__POTW_GLOBAL = potw || null;
+  } catch (e) {
+    window.__POTW_GLOBAL = null;
+  }
   // --------------------------------------------------------------------------
   // 1. Initial Data Setup (LocalStorage)
   // --------------------------------------------------------------------------
@@ -234,27 +310,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const userIdStr = String(user.id || '');
     const userNameLower = (user.name || '').toLowerCase();
 
-    const customMemories = imageStoreDB.cachedMemories || [];
-    const deletedMemoryIds = JSON.parse(localStorage.getItem('campuslens_deleted_memories') || '[]');
-    const modifiedMemoriesMap = JSON.parse(localStorage.getItem('campuslens_modified_memories') || '{}');
-
-    let baseMemories = (MULensData && Array.isArray(MULensData.FEATURED_MEMORIES)) ? MULensData.FEATURED_MEMORIES : [];
-    baseMemories = baseMemories.map(bm => {
-      if (modifiedMemoriesMap[bm.id]) {
-        return { ...bm, ...modifiedMemoriesMap[bm.id] };
-      }
-      return bm;
-    });
-
-    let allMemories = [...customMemories];
-    baseMemories.forEach(bm => {
-      if (!allMemories.some(m => String(m.id) === String(bm.id))) {
-        allMemories.push(bm);
-      }
-    });
-
-    // Exclude deleted memories
-    allMemories = allMemories.filter(m => !deletedMemoryIds.includes(m.id) && !deletedMemoryIds.includes(String(m.id)));
+    const allMemories = getAllMemoriesCombined();
 
     // Return memories uploaded by this user
     return allMemories.filter(m => {
@@ -286,14 +342,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function approveMemorySubmission(memId) {
     const memIdStr = String(memId);
+    const currentUser = getCurrentUser();
+    const approvedBy = currentUser ? (currentUser.name || currentUser.id) : 'Admin';
+
+    // 1. Update status in Supabase Database
+    await updateMemoryStatusInSupabase(memIdStr, 'approved', approvedBy);
+
+    // 2. Update status in IndexedDB
     const customMemories = imageStoreDB.cachedMemories || [];
     const targetMem = customMemories.find(m => String(m.id) === memIdStr);
     
     if (targetMem) {
       targetMem.status = 'approved';
       targetMem.approvedAt = Date.now();
-      const currentUser = getCurrentUser();
-      targetMem.approvedBy = currentUser ? (currentUser.id || currentUser.name) : 'Admin';
+      targetMem.approvedBy = approvedBy;
       await imageStoreDB.saveMemory(targetMem);
     } else {
       const modifiedMap = JSON.parse(localStorage.getItem('campuslens_modified_memories') || '{}');
@@ -304,8 +366,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    showToast('🟢 Your submission has been approved and is now public.', 'success');
+    showToast('🟢 Submission approved and published globally to Supabase!', 'success');
 
+    await fetchMemoriesFromSupabase();
     await imageStoreDB.reloadMemoryCache();
     renderDynamicDataFromDataTS();
     renderAdminSpaceView();
@@ -315,6 +378,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function rejectMemorySubmission(memId) {
     const memIdStr = String(memId);
+
+    // 1. Update status in Supabase Database
+    await updateMemoryStatusInSupabase(memIdStr, 'rejected');
+
+    // 2. Update status in IndexedDB
     const customMemories = imageStoreDB.cachedMemories || [];
     const targetMem = customMemories.find(m => String(m.id) === memIdStr);
 
@@ -329,8 +397,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    showToast('🔴 Your submission was not approved.', 'danger');
+    showToast('🔴 Submission rejected.', 'danger');
 
+    await fetchMemoriesFromSupabase();
     await imageStoreDB.reloadMemoryCache();
     renderDynamicDataFromDataTS();
     renderAdminSpaceView();
@@ -1846,33 +1915,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // D. Render Featured Campus Memories Masonry Grid
-    const customMemories = imageStoreDB.cachedMemories || [];
-    const deletedMemoryIds = JSON.parse(localStorage.getItem('campuslens_deleted_memories') || '[]');
-    const modifiedMemoriesMap = JSON.parse(localStorage.getItem('campuslens_modified_memories') || '{}');
-
-    let baseMemories = Array.isArray(MULensData.FEATURED_MEMORIES) ? MULensData.FEATURED_MEMORIES : [];
-    baseMemories = baseMemories.map(bm => {
-      if (modifiedMemoriesMap[bm.id]) {
-        return {
-          ...bm,
-          ...modifiedMemoriesMap[bm.id]
-        };
-      }
-      return bm;
-    });
-
-    let allMemories = [...baseMemories];
-
-    if (customMemories.length > 0) {
-      customMemories.forEach(cm => {
-        if (!allMemories.some(m => m.id === cm.id)) {
-          allMemories.unshift(cm);
-        }
-      });
-    }
-
-    // Filter out deleted memories
-    allMemories = allMemories.filter(m => !deletedMemoryIds.includes(m.id));
+    let allMemories = getAllMemoriesCombined();
 
     // Public Gallery Filter: Only display approved memories (or default sample memories without status)
     const publicMemories = allMemories.filter(m => !m.status || m.status === 'approved');
@@ -2018,23 +2061,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, 50);
   }
 
-  // Render Photo of the Week Section dynamically
+  // Render Photo of the Week Section dynamically (uses global POTW loaded from Supabase storage)
   function renderPOTWSection() {
     const container = document.getElementById('potw-card-container');
     if (!container) return;
 
-    const customPotw = JSON.parse(localStorage.getItem('campuslens_potw_custom') || 'null');
-    const basePotw = (MULensData && MULensData.PHOTO_OF_THE_WEEK) ? MULensData.PHOTO_OF_THE_WEEK : {
-      title: "Golden Hour Over Central Quadrangle",
-      imageUrl: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop",
-      author: { name: "Elena Rostova '26", role: "Senior Photojournalism Fellow", avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop" },
-      location: "North Quad Plaza",
-      date: "Golden Hour",
-      badgeLabel: "Winner • Week 18",
-      description: "Captured during the final evening of Spring 2026 graduation week. The warm sunlight piercing through the gothic arches created a surreal moment of nostalgia, achievement, and quiet reflection."
-    };
+    const potw = window.__POTW_GLOBAL || null;
 
-    const potw = customPotw || basePotw;
+    if (!potw) {
+      container.innerHTML = `<div class="glass-panel potw-card d-flex align-items-center justify-content-center" style="min-height:260px;"><div class="text-muted">No Photo of the Week selected.</div></div>`;
+      return;
+    }
 
     container.innerHTML = `
       <div class="row g-0 align-items-center">
@@ -2055,7 +2092,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             "${potw.description}"
           </p>
 
-          <!-- Camera Tech Specs -->
           <div class="bg-body-secondary p-3 rounded-3 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2 text-muted extra-small">
             <span><i class="bi bi-camera"></i> Sony A7 IV</span>
             <span><i class="bi bi-disc"></i> 35mm f/1.4</span>
@@ -2063,7 +2099,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             <span><i class="bi bi-sun"></i> ISO 100</span>
           </div>
 
-          <!-- Author info & Actions -->
           <div class="d-flex align-items-center justify-content-between pt-3 border-top">
             <div class="d-flex align-items-center gap-3">
               <img src="${potw.author ? potw.author.avatarUrl : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200'}" alt="${potw.author ? potw.author.name : 'Photographer'}" class="author-avatar" style="width: 46px; height: 46px;">
@@ -2098,9 +2133,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const memIdStr = String(memId);
-    let customMemories = imageStoreDB.cachedMemories || [];
-    let baseMemories = (MULensData && Array.isArray(MULensData.FEATURED_MEMORIES)) ? MULensData.FEATURED_MEMORIES : [];
-    let allMemories = [...customMemories, ...baseMemories];
+    let allMemories = getAllMemoriesCombined();
     const memToDelete = allMemories.find(m => String(m.id) === memIdStr || m.id === memId);
 
     if (memToDelete && !canDeleteMemory(memToDelete)) {
@@ -2108,7 +2141,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // 1. Remove from IndexedDB
+    // 1. Remove from Supabase Cloud DB & Storage bucket
+    await deleteMemoryFromSupabase(memIdStr);
+
+    // 2. Remove from IndexedDB
     await imageStoreDB.deleteMemory(memIdStr);
 
     // 2. Add to campuslens_deleted_memories in localStorage
@@ -2147,10 +2183,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (updatedAlbums.length !== albums.length) setUserAlbums(u.id, updatedAlbums);
     });
 
-    // 6. Reset POTW if deleted memory was set as custom POTW
-    const customPotw = JSON.parse(localStorage.getItem('campuslens_potw_custom') || 'null');
-    if (customPotw && (String(customPotw.id) === memIdStr || customPotw.id === memId || customPotw.title === (memToDelete ? memToDelete.title : ''))) {
-      localStorage.removeItem('campuslens_potw_custom');
+    // 6. If deleted memory was the current POTW, re-fetch global POTW from server (do not use localStorage)
+    try {
+      const potw = await fetchPOTWFromSupabase();
+      window.__POTW_GLOBAL = potw || null;
+    } catch (e) {
+      window.__POTW_GLOBAL = null;
     }
 
     showToast('Memory album deleted successfully!', 'info');
@@ -3714,7 +3752,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      showToast('Saving photos safely to IndexedDB...', 'info');
+      showToast('Uploading photos to Supabase Cloud Storage...', 'info');
 
       const imageKeys = [];
       const resolvedUrls = [];
@@ -3724,17 +3762,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         let source = typeof item === 'string' ? item : (item.blob || item.file || item.url);
         const aspect = (item && typeof item === 'object') ? item.aspectRatio : null;
 
-        if (typeof source === 'string' && (source.startsWith('http://') || source.startsWith('https://'))) {
-          imageKeys.push(source);
-          resolvedUrls.push(source);
-        } else {
-          const blobKey = await imageStoreDB.saveBlob(source, null, aspect);
-          if (blobKey) {
-            imageKeys.push(blobKey);
-            const liveUrl = imageStoreDB.getUrlForBlobKey(blobKey);
-            resolvedUrls.push(liveUrl || blobKey);
-          }
+        // 1. Upload to Supabase Cloud Storage bucket 'mulens-media'
+        const cloudUrl = await uploadMediaToSupabase(source, 'memories');
+
+        // 2. Also save locally in IndexedDB as fallback
+        let blobKey = null;
+        if (!(typeof source === 'string' && (source.startsWith('http://') || source.startsWith('https://')))) {
+          blobKey = await imageStoreDB.saveBlob(source, null, aspect);
         }
+
+        if (blobKey) imageKeys.push(blobKey);
+
+        const finalUrl = cloudUrl || (blobKey ? imageStoreDB.getUrlForBlobKey(blobKey) : source);
+        resolvedUrls.push(finalUrl);
       }
 
       const mainImageUrl = resolvedUrls[0] || '';
@@ -3808,8 +3848,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         tags: [category, 'UserUpload', resolvedUrls.length > 1 ? 'Album' : 'Photo']
       };
 
-      // Save custom uploaded memory in IndexedDB
+      // Save custom uploaded memory in Supabase Cloud Database
+      await saveMemoryToSupabase(newMemory);
+
+      // Save custom uploaded memory in IndexedDB as fallback
       await imageStoreDB.saveMemory(newMemory);
+
+      // Refresh cloud memories cache
+      await fetchMemoriesFromSupabase();
 
       // Sync with Logged-in User Albums if user is signed in
       if (currentUser) {
@@ -3915,27 +3961,106 @@ document.addEventListener('DOMContentLoaded', async () => {
   // --------------------------------------------------------------------------
   // Admin Space Control Center Logic & State Management
   // --------------------------------------------------------------------------
+  // Helper: Ensure admin secret is available (reuses existing Admin Verification modal)
+  async function ensureAdminSecret() {
+    return new Promise((resolve) => {
+      try {
+        const existing = sessionStorage.getItem('mulens_admin_secret');
+        if (existing) return resolve(existing);
+
+        const adminModalEl = document.getElementById('adminVerificationModal');
+        const secretInput = document.getElementById('adminSecretKeyInput');
+        const errorAlert = document.getElementById('adminVerificationError');
+        const formEl = document.getElementById('admin-verification-form');
+        const submitBtn = document.getElementById('adminVerificationSubmitBtn');
+        const cancelBtn = document.getElementById('adminVerificationCancelBtn');
+
+        if (!adminModalEl || !secretInput || !submitBtn) return resolve(null);
+
+        const modalInstance = (window.bootstrap && bootstrap.Modal)
+          ? bootstrap.Modal.getOrCreateInstance(adminModalEl)
+          : null;
+
+        // preserve existing handlers so we can restore them
+        const oldFormOnsubmit = formEl ? formEl.onsubmit : null;
+        const oldSubmitOnclick = submitBtn.onclick;
+        const oldCancelOnclick = cancelBtn ? cancelBtn.onclick : null;
+
+        if (secretInput) secretInput.value = '';
+        if (errorAlert) errorAlert.classList.add('d-none');
+
+        const cleanup = () => {
+          if (formEl) formEl.onsubmit = oldFormOnsubmit;
+          submitBtn.onclick = oldSubmitOnclick;
+          if (cancelBtn) cancelBtn.onclick = oldCancelOnclick;
+          adminModalEl.removeEventListener('hidden.bs.modal', hiddenHandler);
+        };
+
+        const submitHandler = (e) => {
+          if (e && e.preventDefault) e.preventDefault();
+          const val = secretInput.value ? secretInput.value.trim() : '';
+          if (!val) {
+            if (errorAlert) {
+              errorAlert.innerText = 'Please enter admin secret.';
+              errorAlert.classList.remove('d-none');
+            }
+            return;
+          }
+          sessionStorage.setItem('mulens_admin_secret', val);
+          cleanup();
+          if (modalInstance) modalInstance.hide();
+          resolve(val);
+        };
+
+        const cancelHandler = (e) => {
+          if (e && e.preventDefault) e.preventDefault();
+          cleanup();
+          if (modalInstance) modalInstance.hide();
+          resolve(null);
+        };
+
+        const hiddenHandler = () => {
+          // modal closed without submitting
+          cleanup();
+          resolve(null);
+        };
+
+        if (formEl) formEl.onsubmit = submitHandler;
+        submitBtn.onclick = submitHandler;
+        if (cancelBtn) cancelBtn.onclick = cancelHandler;
+        adminModalEl.addEventListener('hidden.bs.modal', hiddenHandler);
+
+        if (modalInstance) {
+          modalInstance.show();
+          setTimeout(() => { try { secretInput.focus(); } catch (e) {} }, 80);
+        } else {
+          // no bootstrap modal available -> fallback
+          resolve(null);
+        }
+      } catch (err) {
+        console.error('[ensureAdminSecret] Error:', err);
+        resolve(null);
+      }
+    });
+  }
   function renderAdminSpaceView() {
-    // 1. Render Active POTW Preview
+    // 1. Render Active POTW Preview (use server-side global POTW only)
     const potwPreviewEl = document.getElementById('admin-active-potw-preview');
-    const customPotw = JSON.parse(localStorage.getItem('campuslens_potw_custom') || 'null');
-    const basePotw = (window.MULensData && window.MULensData.PHOTO_OF_THE_WEEK) ? window.MULensData.PHOTO_OF_THE_WEEK : {
-      title: "Golden Hour Over Central Quadrangle",
-      imageUrl: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600",
-      author: { name: "Elena Rostova '26", role: "Senior Photojournalism Fellow" },
-      badgeLabel: "Winner • Week 18"
-    };
-    const activePotw = customPotw || basePotw;
+    const activePotw = window.__POTW_GLOBAL || null;
 
     if (potwPreviewEl) {
-      potwPreviewEl.innerHTML = `
-        <img src="${normalizeImgUrl(activePotw.imageUrl)}" class="w-100 h-100 object-fit-cover position-absolute inset-0" alt="${activePotw.title}" style="height: 220px;">
-        <div class="position-absolute bottom-0 start-0 end-0 p-3 bg-dark bg-opacity-75 text-white">
-          <span class="badge bg-warning text-dark mb-1">${activePotw.badgeLabel || 'POTW'}</span>
-          <h6 class="fw-bold text-truncate mb-0">${activePotw.title}</h6>
-          <div class="extra-small text-white-50">By ${activePotw.author ? activePotw.author.name : 'Photographer'}</div>
-        </div>
-      `;
+      if (!activePotw) {
+        potwPreviewEl.innerHTML = `<div class="d-flex align-items-center justify-content-center h-100 text-muted">No Photo of the Week configured.</div>`;
+      } else {
+        potwPreviewEl.innerHTML = `
+          <img src="${normalizeImgUrl(activePotw.imageUrl)}" class="w-100 h-100 object-fit-cover position-absolute inset-0" alt="${activePotw.title}" style="height: 220px;">
+          <div class="position-absolute bottom-0 start-0 end-0 p-3 bg-dark bg-opacity-75 text-white">
+            <span class="badge bg-warning text-dark mb-1">${activePotw.badgeLabel || 'POTW'}</span>
+            <h6 class="fw-bold text-truncate mb-0">${activePotw.title}</h6>
+            <div class="extra-small text-white-50">By ${activePotw.author ? activePotw.author.name : 'Photographer'}</div>
+          </div>
+        `;
+      }
     }
 
     // Pre-fill Custom POTW form
@@ -3947,29 +4072,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const potwBadgeInput = document.getElementById('adminPotwBadge');
     const potwQuoteInput = document.getElementById('adminPotwQuote');
 
-    if (potwTitleInput) potwTitleInput.value = activePotw.title || '';
-    if (potwUrlInput) potwUrlInput.value = activePotw.imageUrl || '';
-    if (potwAuthorInput) potwAuthorInput.value = activePotw.author ? activePotw.author.name : '';
-    if (potwRoleInput) potwRoleInput.value = activePotw.author ? activePotw.author.role : '';
-    if (potwLocInput) potwLocInput.value = activePotw.location || '';
-    if (potwBadgeInput) potwBadgeInput.value = activePotw.badgeLabel || 'Winner • Photo Of The Week';
-    if (potwQuoteInput) potwQuoteInput.value = activePotw.description || '';
+    if (potwTitleInput) potwTitleInput.value = activePotw ? (activePotw.title || '') : '';
+    if (potwUrlInput) potwUrlInput.value = activePotw ? (activePotw.imageUrl || '') : '';
+    if (potwAuthorInput) potwAuthorInput.value = activePotw ? (activePotw.author ? activePotw.author.name : '') : '';
+    if (potwRoleInput) potwRoleInput.value = activePotw ? (activePotw.author ? activePotw.author.role : '') : '';
+    if (potwLocInput) potwLocInput.value = activePotw ? (activePotw.location || '') : '';
+    if (potwBadgeInput) potwBadgeInput.value = activePotw ? (activePotw.badgeLabel || 'Winner • Photo Of The Week') : '';
+    if (potwQuoteInput) potwQuoteInput.value = activePotw ? (activePotw.description || '') : '';
 
     // 2. Load all active gallery items
-    const customMemories = imageStoreDB.cachedMemories || [];
-    const deletedMemoryIds = JSON.parse(localStorage.getItem('campuslens_deleted_memories') || '[]');
-    const modifiedMemoriesMap = JSON.parse(localStorage.getItem('campuslens_modified_memories') || '{}');
-
-    let baseMemories = (window.MULensData && Array.isArray(window.MULensData.FEATURED_MEMORIES)) ? window.MULensData.FEATURED_MEMORIES : [];
-    baseMemories = baseMemories.map(bm => modifiedMemoriesMap[bm.id] ? { ...bm, ...modifiedMemoriesMap[bm.id] } : bm);
-
-    let allMemories = [...baseMemories];
-    customMemories.forEach(cm => {
-      if (!allMemories.some(m => m.id === cm.id)) {
-        allMemories.unshift(cm);
-      }
-    });
-    allMemories = allMemories.filter(m => !deletedMemoryIds.includes(m.id));
+    let allMemories = getAllMemoriesCombined();
 
     // Populate Quick Select Memory dropdown
     const potwSelect = document.getElementById('admin-potw-select-memory');
@@ -4199,26 +4311,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         adminTableBody.querySelectorAll('.set-potw-admin-btn').forEach(btn => {
-          btn.onclick = (e) => {
+          btn.onclick = async (e) => {
             e.stopPropagation();
             e.preventDefault();
             const memId = btn.getAttribute('data-id');
             const selectedMem = allMemories.find(m => m.id === memId);
             if (selectedMem) {
-              const potwObj = {
-                id: selectedMem.id,
-                title: selectedMem.title,
-                imageUrl: selectedMem.imageUrl,
-                author: selectedMem.author,
-                location: selectedMem.location,
-                date: selectedMem.date || 'Weekly Spotlight',
-                badgeLabel: 'Winner • Photo Of The Week',
-                description: selectedMem.description || selectedMem.title
-              };
-              localStorage.setItem('campuslens_potw_custom', JSON.stringify(potwObj));
-              renderPOTWSection();
-              renderAdminSpaceView();
-              showToast(`Photo "${selectedMem.title}" is now set as Photo of the Week!`, 'success');
+              const adminSecret = await ensureAdminSecret();
+              if (!adminSecret) return;
+              const resp = await setPOTWOnServer({ memId: selectedMem.id, custom: null, adminSecret });
+              if (resp && resp.ok && resp.body && resp.body.success) {
+                window.__POTW_GLOBAL = resp.body.potw || {
+                  type: 'memory', memId: selectedMem.id, title: selectedMem.title, imageUrl: selectedMem.imageUrl,
+                  author: selectedMem.author, location: selectedMem.location, date: selectedMem.date || 'Weekly Spotlight', badgeLabel: 'Winner • Photo Of The Week'
+                };
+                renderPOTWSection();
+                renderAdminSpaceView();
+                showToast(`Photo "${selectedMem.title}" is now set as Photo of the Week!`, 'success');
+              } else if (resp && !resp.ok) {
+                if (resp.status === 401) {
+                  sessionStorage.removeItem('mulens_admin_secret');
+                  showToast('Admin verification failed. Please verify again.', 'danger');
+                  return;
+                }
+                const serverMsg = resp.body && (resp.body.error || resp.body.message || JSON.stringify(resp.body)) || `HTTP ${resp.status}`;
+                showToast(`Server error setting POTW: ${serverMsg}`, 'danger');
+              } else {
+                showToast('Unexpected error setting POTW; check server logs.', 'danger');
+              }
             }
           };
         });
@@ -4275,7 +4395,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 1. Set Selected Memory as POTW
     const applyPotwBtn = document.getElementById('admin-apply-selected-potw');
     if (applyPotwBtn) {
-      applyPotwBtn.onclick = () => {
+      applyPotwBtn.onclick = async () => {
         const selVal = document.getElementById('admin-potw-select-memory')?.value;
         if (!selVal) {
           showToast('Please select a photo from the dropdown first.', 'warning');
@@ -4286,20 +4406,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         let allMemories = [...baseMemories, ...customMemories];
         const match = allMemories.find(m => m.id === selVal);
         if (match) {
-          const potwObj = {
-            id: match.id,
-            title: match.title,
-            imageUrl: match.imageUrl,
-            author: match.author,
-            location: match.location,
-            date: match.date || 'Weekly Spotlight',
-            badgeLabel: 'Winner • Photo Of The Week',
-            description: match.description || match.title
-          };
-          localStorage.setItem('campuslens_potw_custom', JSON.stringify(potwObj));
-          renderPOTWSection();
-          renderAdminSpaceView();
-          showToast(`Set "${match.title}" as Photo of the Week!`, 'success');
+          const adminSecret = await ensureAdminSecret();
+          if (!adminSecret) return;
+          const resp = await setPOTWOnServer({ memId: match.id, custom: null, adminSecret });
+          if (resp && resp.ok && resp.body && resp.body.success) {
+            window.__POTW_GLOBAL = resp.body.potw || {
+              type: 'memory', memId: match.id, title: match.title, imageUrl: match.imageUrl,
+              author: match.author, location: match.location, date: match.date || 'Weekly Spotlight', badgeLabel: 'Winner • Photo Of The Week'
+            };
+            renderPOTWSection();
+            renderAdminSpaceView();
+            showToast(`Set "${match.title}" as Photo of the Week!`, 'success');
+          } else if (resp && !resp.ok) {
+            if (resp.status === 401) {
+              sessionStorage.removeItem('mulens_admin_secret');
+              showToast('Admin verification failed. Please verify again.', 'danger');
+              return;
+            }
+            const serverMsg = resp.body && (resp.body.error || resp.body.message || JSON.stringify(resp.body)) || `HTTP ${resp.status}`;
+            showToast(`Server error setting POTW: ${serverMsg}`, 'danger');
+          } else {
+            showToast('Unexpected error setting POTW; check server logs.', 'danger');
+          }
         }
       };
     }
@@ -4307,18 +4435,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 2. Reset POTW to Default
     const resetPotwBtn = document.getElementById('admin-reset-potw-btn');
     if (resetPotwBtn) {
-      resetPotwBtn.onclick = () => {
-        localStorage.removeItem('campuslens_potw_custom');
-        renderPOTWSection();
-        renderAdminSpaceView();
-        showToast('Reset Photo of the Week to default spotlight.', 'info');
+      resetPotwBtn.onclick = async () => {
+        const adminSecret = await ensureAdminSecret();
+        if (!adminSecret) return;
+        try {
+          const res = await fetch('/api/set-potw', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-admin-secret': adminSecret },
+            body: JSON.stringify({ action: 'clear' })
+          });
+          if (res.ok) {
+            window.__POTW_GLOBAL = null;
+            renderPOTWSection();
+            renderAdminSpaceView();
+            showToast('Reset Photo of the Week on server successfully.', 'info');
+          } else {
+            if (res.status === 401) {
+              sessionStorage.removeItem('mulens_admin_secret');
+              showToast('Admin verification failed. Please verify again.', 'danger');
+              return;
+            }
+            let body = {};
+            try { body = await res.json(); } catch (e) { body = { message: await res.text() }; }
+            const msg = body.error || body.message || `HTTP ${res.status}`;
+            showToast(`Server error clearing POTW: ${msg}`, 'danger');
+          }
+        } catch (e) {
+          showToast('Failed to clear Photo of the Week on server; no local changes made.', 'danger');
+        }
       };
     }
 
     // 3. Custom POTW Form Submission
     const customPotwForm = document.getElementById('admin-custom-potw-form');
     if (customPotwForm) {
-      customPotwForm.onsubmit = (e) => {
+      customPotwForm.onsubmit = async (e) => {
         e.preventDefault();
         const title = document.getElementById('adminPotwTitle')?.value.trim();
         const imageUrl = document.getElementById('adminPotwImageUrl')?.value.trim();
@@ -4343,10 +4494,25 @@ document.addEventListener('DOMContentLoaded', async () => {
           description: description || title
         };
 
-        localStorage.setItem('campuslens_potw_custom', JSON.stringify(potwObj));
-        renderPOTWSection();
-        renderAdminSpaceView();
-        showToast('Custom Photo of the Week published successfully!', 'success');
+        const adminSecret = await ensureAdminSecret();
+        if (!adminSecret) return;
+        const resp = await setPOTWOnServer({ memId: null, custom: potwObj, adminSecret });
+        if (resp && resp.ok && resp.body && resp.body.success) {
+          window.__POTW_GLOBAL = resp.body.potw || potwObj;
+          renderPOTWSection();
+          renderAdminSpaceView();
+          showToast('Custom Photo of the Week published successfully!', 'success');
+        } else if (resp && !resp.ok) {
+          if (resp.status === 401) {
+            sessionStorage.removeItem('mulens_admin_secret');
+            showToast('Admin verification failed. Please verify again.', 'danger');
+            return;
+          }
+          const serverMsg = resp.body && (resp.body.error || resp.body.message || JSON.stringify(resp.body)) || `HTTP ${resp.status}`;
+          showToast(`Server error publishing custom POTW: ${serverMsg}`, 'danger');
+        } else {
+          showToast('Unexpected error publishing custom POTW; check server logs.', 'danger');
+        }
       };
     }
 
@@ -4589,6 +4755,81 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
 
         reader.readAsText(file);
+      };
+    }
+
+    // 8. Supabase Cloud Sync & Migration Button Listener
+    const syncSupabaseBtn = document.getElementById('admin-sync-supabase-btn');
+    if (syncSupabaseBtn) {
+      const executeMigration = async (adminSecretKey) => {
+        try {
+          syncSupabaseBtn.disabled = true;
+          syncSupabaseBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status"></span> Syncing to Supabase...`;
+          showToast('☁️ Starting migration of local IndexedDB data to Supabase Cloud Storage & Database...', 'info');
+
+          const result = await migrateIndexedDBToSupabase((current, total, title) => {
+            showToast(`Syncing memory [${current}/${total}]: ${title}`, 'info');
+          }, adminSecretKey);
+
+          if (result.success) {
+            showToast(`🟢 ${result.message}`, 'success');
+            await fetchMemoriesFromSupabase();
+            renderDynamicDataFromDataTS();
+            renderAdminSpaceView();
+            renderProfileView();
+            renderProfileTabs();
+          } else {
+            showToast(`🔴 Migration warning: ${result.message}`, 'danger');
+          }
+        } catch (err) {
+          console.error('[Supabase Migration Error]:', err.message || 'Error occurred');
+          showToast(`🔴 Failed to sync data to Supabase: ${err.message || 'Error occurred'}`, 'danger');
+        } finally {
+          syncSupabaseBtn.disabled = false;
+          syncSupabaseBtn.innerHTML = `<i class="bi bi-cloud-upload-fill fs-6"></i> ☁️ Sync Local Data to Supabase`;
+        }
+      };
+
+      syncSupabaseBtn.onclick = () => {
+        const storedSecret = sessionStorage.getItem('mulens_admin_secret');
+        const adminModalEl = document.getElementById('adminVerificationModal');
+        const secretInput = document.getElementById('adminSecretKeyInput');
+        const errorAlert = document.getElementById('adminVerificationError');
+        const formEl = document.getElementById('admin-verification-form');
+        const submitBtn = document.getElementById('adminVerificationSubmitBtn');
+
+        if (!adminModalEl) {
+          executeMigration(storedSecret || '');
+          return;
+        }
+
+        const modalInstance = (window.bootstrap && bootstrap.Modal)
+          ? bootstrap.Modal.getOrCreateInstance(adminModalEl)
+          : null;
+
+        if (secretInput) secretInput.value = storedSecret || '';
+        if (errorAlert) errorAlert.classList.add('d-none');
+
+        const handleConfirm = async (e) => {
+          if (e) e.preventDefault();
+          const enteredSecret = secretInput ? secretInput.value.trim() : '';
+          if (enteredSecret) {
+            sessionStorage.setItem('mulens_admin_secret', enteredSecret);
+          }
+          if (modalInstance) {
+            modalInstance.hide();
+          }
+          await executeMigration(enteredSecret);
+        };
+
+        if (formEl) formEl.onsubmit = handleConfirm;
+        if (submitBtn) submitBtn.onclick = handleConfirm;
+
+        if (modalInstance) {
+          modalInstance.show();
+        } else {
+          executeMigration(storedSecret || '');
+        }
       };
     }
   }
