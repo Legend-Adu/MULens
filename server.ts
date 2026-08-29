@@ -12,6 +12,9 @@ import { handler as migrateHandler } from './netlify/functions/migrate.js';
 import { handler as submitHandler } from './netlify/functions/submit.js';
 import { handler as adminActionHandler } from './netlify/functions/admin-action.js';
 import { handler as setPotwHandler } from './netlify/functions/set-potw.js';
+import { handler as manageEventsHandler } from './netlify/functions/manage-events.js';
+import { handler as submitVoiceHandler } from './netlify/functions/submit-voice.js';
+import { handler as manageVoicesHandler } from './netlify/functions/manage-voices.js';
 
 async function startServer() {
   const app = express();
@@ -26,6 +29,7 @@ async function startServer() {
       const event = {
         httpMethod: req.method,
         headers: req.headers,
+        queryStringParameters: req.query,
         body: JSON.stringify(req.body)
       };
       const result = await fnHandler(event);
@@ -50,6 +54,9 @@ async function startServer() {
   app.all('/api/submit', (req, res) => runNetlifyFunction(submitHandler, req, res));
   app.all('/api/admin-action', (req, res) => runNetlifyFunction(adminActionHandler, req, res));
   app.all('/api/set-potw', (req, res) => runNetlifyFunction(setPotwHandler, req, res));
+  app.all('/api/manage-events', (req, res) => runNetlifyFunction(manageEventsHandler, req, res));
+  app.all('/api/submit-voice', (req, res) => runNetlifyFunction(submitVoiceHandler, req, res));
+  app.all('/api/manage-voices', (req, res) => runNetlifyFunction(manageVoicesHandler, req, res));
 
   // Vite middleware for development vs static serve for production
   if (process.env.NODE_ENV !== 'production') {

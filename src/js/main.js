@@ -10,6 +10,12 @@ import {
   fetchMemoriesFromSupabase,
   fetchPOTWFromSupabase,
   setPOTWOnServer,
+  fetchEventsFromSupabase,
+  manageEventOnServer,
+  fetchCampusVoices,
+  fetchAllCampusVoices,
+  submitCampusVoice,
+  manageVoiceOnServer,
   saveMemoryToSupabase,
   updateMemoryStatusInSupabase,
   deleteMemoryFromSupabase,
@@ -102,6 +108,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.__POTW_GLOBAL = potw || null;
   } catch (e) {
     window.__POTW_GLOBAL = null;
+  }
+  try {
+    const events = await fetchEventsFromSupabase();
+    window.__EVENTS_GLOBAL = Array.isArray(events) ? events : [];
+  } catch (e) {
+    window.__EVENTS_GLOBAL = [];
+  }
+  try {
+    const voicesData = await fetchAllCampusVoices();
+    window.__VOICES_GLOBAL = voicesData || { voices: [], featuredVoiceId: null };
+  } catch (e) {
+    window.__VOICES_GLOBAL = { voices: [], featuredVoiceId: null };
   }
   // --------------------------------------------------------------------------
   // 1. Initial Data Setup (LocalStorage)
@@ -207,6 +225,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (updated) {
       localStorage.setItem('campuslens_users', JSON.stringify(storedUsersList));
     }
+  }
+
+  // Ensure default active user is set to Admin (Shariar Adnan) if not logged in
+  if (!localStorage.getItem('campuslens_user')) {
+    localStorage.setItem('campuslens_user', JSON.stringify(defaultUsers[0]));
   }
 
   // Sample initial favorites for Alex Rivera if not set
@@ -720,10 +743,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Floating Navbar Scrollspy for Active Section Glow
-  const navLinks = document.querySelectorAll('.navbar-custom .nav-link');
-  const navSections = document.querySelectorAll('#page-home section[id]');
-
   function updateActiveNavLink() {
+    const homePage = document.getElementById('page-home');
+    if (!homePage || homePage.classList.contains('d-none')) {
+      return;
+    }
+    const navSections = document.querySelectorAll('#page-home section[id]');
     if (!navSections.length) return;
     let currentSection = 'hero';
     const scrollPosition = window.scrollY + 220;
@@ -736,7 +761,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
-    navLinks.forEach(link => {
+    const allNavLinks = document.querySelectorAll('.navbar-custom .nav-link, #offcanvasNavbar .nav-link');
+    allNavLinks.forEach(link => {
       const href = link.getAttribute('href');
       if (href === `#${currentSection}`) {
         link.classList.add('active');
@@ -1751,64 +1777,84 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 6. Dynamic Data Integration from data.ts & Interactive Controls
   // --------------------------------------------------------------------------
 
+  function getApprovedPublicMemories() {
+    const allMemories = getAllMemoriesCombined();
+    return allMemories.filter(m => !m.status || m.status === 'approved');
+  }
+
+  function countApprovedMemoryPhotos(memories) {
+    const uniqueImageUrls = new Set();
+
+    memories.forEach((mem) => {
+      const normalizedImages = [];
+
+      if (Array.isArray(mem.albumImages) && mem.albumImages.length > 0) {
+        normalizedImages.push(...mem.albumImages.map(img => normalizeImgUrl(img)).filter(Boolean));
+      }
+
+      const singleImage = normalizeImgUrl(mem.imageUrl);
+      if (singleImage) {
+        normalizedImages.push(singleImage);
+      }
+
+      normalizedImages.forEach((img) => {
+        const key = img.trim().toLowerCase();
+        if (key) uniqueImageUrls.add(key);
+      });
+    });
+
+    return uniqueImageUrls.size;
+  }
+
   // Real-Time Statistics Calculation Engine
   function updateRealtimeStatsCounters() {
-    const customMemories = JSON.parse(localStorage.getItem('campuslens_custom_memories') || '[]');
-    const allUsers = JSON.parse(localStorage.getItem('campuslens_users') || '[]');
-    const baseMemories = (MULensData && Array.isArray(MULensData.FEATURED_MEMORIES)) ? MULensData.FEATURED_MEMORIES : [];
-    const allMemories = [...baseMemories, ...customMemories];
+    const approvedPublicMemories = getApprovedPublicMemories();
+    const totalMemoriesArchived = approvedPublicMemories.length;
+    const totalPhotosArchived = countApprovedMemoryPhotos(approvedPublicMemories);
 
-    // 1. Campus Photos count (Summing individual photos across single photos and albums)
-    let totalPhotos = 0;
-    allMemories.forEach(mem => {
-      if (Array.isArray(mem.albumImages) && mem.albumImages.length > 0) {
-        totalPhotos += mem.albumImages.length;
-      } else {
-        totalPhotos += 1;
-      }
-    });
+    const allEvents = getAllEvents();
+    const upcomingEventsCount = allEvents.filter((evt) => {
+      const status = getEventDynamicStatus(evt);
+      return status === 'Upcoming' || status === 'Today';
+    }).length;
 
-    // 2. Video Stories count
-    const videoMemoriesCount = allMemories.filter(m => 
-      m.category === 'video' || 
-      (m.tags && (m.tags.includes('video') || m.tags.includes('Video'))) ||
-      (m.title && m.title.toLowerCase().includes('video'))
-    ).length;
+    const approvedVoicesCount = (window.__VOICES_GLOBAL && Array.isArray(window.__VOICES_GLOBAL.voices))
+      ? window.__VOICES_GLOBAL.voices.filter(v => v && String(v.status || '').toLowerCase() === 'approved').length
+      : 0;
 
-    // 3. Events Covered count
-    const baseEvents = (MULensData && Array.isArray(MULensData.UPCOMING_EVENTS)) ? MULensData.UPCOMING_EVENTS.length : 6;
-    const customEventsCount = customMemories.length;
-    const totalEventsCovered = baseEvents + customEventsCount;
-
-    // 4. Contributors count
-    const uniqueAuthors = new Set();
-    allMemories.forEach(m => {
-      if (m.author && m.author.name) uniqueAuthors.add(m.author.name);
-    });
-    allUsers.forEach(u => {
-      if (u.name) uniqueAuthors.add(u.name);
-    });
-    const totalContributors = uniqueAuthors.size;
-
-    // Update statistics elements
     const photoEl = document.getElementById('stat-count-photos');
-    const videoEl = document.getElementById('stat-count-videos');
+    const memoryEl = document.getElementById('stat-count-memories');
     const eventEl = document.getElementById('stat-count-events');
-    const contributorEl = document.getElementById('stat-count-contributors');
+    const voiceEl = document.getElementById('stat-count-voices');
 
-    if (photoEl) animateStatCounter(photoEl, totalPhotos);
-    if (videoEl) animateStatCounter(videoEl, videoMemoriesCount > 0 ? videoMemoriesCount : 12);
-    if (eventEl) animateStatCounter(eventEl, totalEventsCovered);
-    if (contributorEl) animateStatCounter(contributorEl, totalContributors);
+    if (photoEl) animateStatCounter(photoEl, totalPhotosArchived);
+    if (memoryEl) animateStatCounter(memoryEl, totalMemoriesArchived);
+    if (eventEl) animateStatCounter(eventEl, upcomingEventsCount);
+    if (voiceEl) animateStatCounter(voiceEl, approvedVoicesCount);
+
+    const footerMemEl = document.getElementById('footer-stat-memories');
+    const footerEventEl = document.getElementById('footer-stat-events');
+    const footerVoiceEl = document.getElementById('footer-stat-voices');
+
+    if (footerMemEl) animateStatCounter(footerMemEl, totalMemoriesArchived);
+    if (footerEventEl) animateStatCounter(footerEventEl, upcomingEventsCount);
+    if (footerVoiceEl) animateStatCounter(footerVoiceEl, approvedVoicesCount);
   }
 
   function animateStatCounter(element, targetVal) {
     if (!element) return;
-    const suffix = element.getAttribute('data-suffix') || '+';
+    const suffix = element.getAttribute('data-suffix') || '';
+    const displayValue = targetVal === null || targetVal === undefined || Number.isNaN(Number(targetVal)) ? '—' : `${Number(targetVal).toLocaleString()}${suffix}`;
+
+    if (targetVal === null || targetVal === undefined || Number.isNaN(Number(targetVal))) {
+      element.innerText = '—';
+      return;
+    }
+
     let currentVal = parseInt(element.innerText.replace(/[^0-9]/g, ''), 10) || 0;
-    
+
     if (currentVal === targetVal && element.innerText !== '0') {
-      element.innerText = targetVal.toLocaleString() + suffix;
+      element.innerText = displayValue;
       return;
     }
 
@@ -2040,6 +2086,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     bindMemoryCardClickListeners();
     updateRealtimeStatsCounters();
     renderPOTWSection();
+    renderUpcomingEvents();
+    renderCampusVoices();
 
     // Auto-adjust aspect ratio for uploaded or dynamic images to preserve exact natural photo ratio
     setTimeout(() => {
@@ -2059,6 +2107,1701 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       });
     }, 50);
+  }
+
+  // --------------------------------------------------------------------------
+  // Campus Events Global Engine & Management
+  // --------------------------------------------------------------------------
+  let currentlySelectedEvent = null;
+  let allEventsModalActiveCategory = 'all';
+  let allEventsModalSearchQuery = '';
+  let adminEventsFilter = 'all';
+  let adminEventsSearch = '';
+
+  function getAllEvents() {
+    if (Array.isArray(window.__EVENTS_GLOBAL)) {
+      return window.__EVENTS_GLOBAL;
+    }
+    return [];
+  }
+
+  function getEventDateSortValue(evt) {
+    if (!evt) return 0;
+    if (evt.date) {
+      const fullDateStr = `${evt.date} ${evt.year || '2026'}`;
+      const parsed = Date.parse(fullDateStr);
+      if (!isNaN(parsed)) return parsed;
+    }
+    return 0;
+  }
+
+  function getEventDynamicStatus(evt) {
+    if (!evt) return 'Upcoming';
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    let eventDate = null;
+    if (evt.date) {
+      const fullDateStr = `${evt.date} ${evt.year || now.getFullYear()}`;
+      const parsed = Date.parse(fullDateStr);
+      if (!isNaN(parsed)) {
+        eventDate = new Date(parsed);
+      }
+    }
+
+    if (eventDate) {
+      eventDate.setHours(0, 0, 0, 0);
+      const diff = eventDate.getTime() - now.getTime();
+      if (diff < 0) {
+        return 'Past';
+      } else if (diff === 0) {
+        return 'Today';
+      } else {
+        return 'Upcoming';
+      }
+    }
+
+    return evt.status || 'Upcoming';
+  }
+
+  function renderUpcomingEvents() {
+    const container = document.getElementById('upcoming-events-container');
+    const emptyState = document.getElementById('events-empty-state');
+    if (!container) return;
+
+    const eventsList = getAllEvents();
+
+    // Public homepage only displays Upcoming & Today events, sorted by date (nearest first)
+    const activeEvents = eventsList.filter(evt => {
+      const status = getEventDynamicStatus(evt);
+      return status === 'Upcoming' || status === 'Today';
+    });
+
+    activeEvents.sort((a, b) => getEventDateSortValue(a) - getEventDateSortValue(b));
+
+    const displayEvents = activeEvents.slice(0, 4);
+
+    if (displayEvents.length === 0) {
+      container.innerHTML = '';
+      if (emptyState) emptyState.classList.remove('d-none');
+      return;
+    }
+
+    if (emptyState) emptyState.classList.add('d-none');
+
+    container.innerHTML = displayEvents.map((evt, idx) => {
+      const bannerImg = normalizeImgUrl(evt.imageUrl);
+      const orgLogo = evt.organizerLogo ? normalizeImgUrl(evt.organizerLogo) : 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=150&auto=format&fit=crop';
+      const catClass = evt.categoryClass || 'bg-primary-subtle text-primary border-primary-subtle';
+
+      return `
+        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="${(idx % 4) * 100 + 100}">
+          <div class="campus-event-card shadow-sm h-100" data-event-id="${evt.id}">
+            <div class="event-banner-wrap">
+              <img src="${bannerImg}" alt="${evt.title.replace(/"/g, '&quot;')}" class="event-banner-img" loading="lazy">
+              <div class="event-banner-overlay"></div>
+              <div class="event-floating-date">
+                <div class="date-day">${evt.day || '15'}</div>
+                <div class="date-month">${evt.month || 'MAY'}</div>
+              </div>
+              <div class="event-floating-category">
+                <span class="badge rounded-pill ${catClass} border shadow-sm">${evt.category}</span>
+              </div>
+            </div>
+
+            <div class="event-card-body">
+              <div class="event-organizer-row">
+                <img src="${orgLogo}" alt="${evt.organizer.replace(/"/g, '&quot;')}" class="event-organizer-logo">
+                <span class="event-organizer-name text-truncate">${evt.organizer}</span>
+              </div>
+
+              <h4 class="event-card-title mb-2" title="${evt.title.replace(/"/g, '&quot;')}">${evt.title}</h4>
+
+              <div class="event-meta-list">
+                <div class="event-meta-item">
+                  <i class="bi bi-geo-alt-fill"></i>
+                  <span class="text-truncate">${evt.location}</span>
+                </div>
+                <div class="event-meta-item">
+                  <i class="bi bi-clock"></i>
+                  <span>${evt.time}</span>
+                </div>
+                <div class="event-meta-item">
+                  <i class="bi bi-people"></i>
+                  <span class="text-truncate">${evt.audience}</span>
+                </div>
+              </div>
+
+              <div class="event-card-footer">
+                <div>
+                  <span class="badge bg-secondary-subtle text-secondary border extra-small">${evt.entryFee || 'Free Entry'}</span>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 view-event-details-btn" data-event-id="${evt.id}">
+                  <i class="bi bi-info-circle me-1"></i> View Details
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    bindEventCardListeners();
+  }
+
+  function bindEventCardListeners() {
+    document.querySelectorAll('.view-event-details-btn').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const evtId = btn.getAttribute('data-event-id');
+        openEventDetailsModal(evtId);
+      };
+    });
+
+    document.querySelectorAll('.campus-event-card').forEach(card => {
+      card.style.cursor = 'pointer';
+      card.onclick = (e) => {
+        if (e.target.closest('.view-event-details-btn')) return;
+        const evtId = card.getAttribute('data-event-id');
+        if (evtId) openEventDetailsModal(evtId);
+      };
+    });
+  }
+
+  function renderAllEventsModal() {
+    const container = document.getElementById('all-events-modal-grid');
+    const emptyState = document.getElementById('all-events-modal-empty');
+    const countBadge = document.getElementById('all-events-modal-count');
+    if (!container) return;
+
+    const eventsList = getAllEvents();
+
+    let filtered = eventsList.filter(evt => {
+      if (allEventsModalActiveCategory !== 'all' && evt.category !== allEventsModalActiveCategory) {
+        return false;
+      }
+      if (allEventsModalSearchQuery) {
+        const q = allEventsModalSearchQuery.toLowerCase();
+        const haystack = `${evt.title} ${evt.organizer} ${evt.category} ${evt.location} ${evt.description}`.toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+      return true;
+    });
+
+    // Sort: upcoming & today first, then past
+    filtered.sort((a, b) => {
+      const statusA = getEventDynamicStatus(a);
+      const statusB = getEventDynamicStatus(b);
+      if (statusA === 'Past' && statusB !== 'Past') return 1;
+      if (statusA !== 'Past' && statusB === 'Past') return -1;
+      return getEventDateSortValue(a) - getEventDateSortValue(b);
+    });
+
+    if (countBadge) countBadge.innerText = `${filtered.length} Events`;
+
+    if (filtered.length === 0) {
+      container.innerHTML = '';
+      if (emptyState) emptyState.classList.remove('d-none');
+      return;
+    }
+
+    if (emptyState) emptyState.classList.add('d-none');
+
+    container.innerHTML = filtered.map(evt => {
+      const bannerImg = normalizeImgUrl(evt.imageUrl);
+      const orgLogo = evt.organizerLogo ? normalizeImgUrl(evt.organizerLogo) : 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=150&auto=format&fit=crop';
+      const catClass = evt.categoryClass || 'bg-primary-subtle text-primary border-primary-subtle';
+      const status = getEventDynamicStatus(evt);
+      const isPast = status === 'Past';
+
+      return `
+        <div class="col-md-6 col-lg-4">
+          <div class="campus-event-card shadow-sm h-100 ${isPast ? 'opacity-75' : ''}" data-event-id="${evt.id}">
+            <div class="event-banner-wrap">
+              <img src="${bannerImg}" alt="${evt.title.replace(/"/g, '&quot;')}" class="event-banner-img" loading="lazy">
+              <div class="event-banner-overlay"></div>
+              <div class="event-floating-date">
+                <div class="date-day">${evt.day || '15'}</div>
+                <div class="date-month">${evt.month || 'MAY'}</div>
+              </div>
+              <div class="event-floating-category d-flex gap-1">
+                <span class="badge rounded-pill ${catClass} border shadow-sm">${evt.category}</span>
+                ${isPast ? '<span class="badge rounded-pill bg-dark text-white border shadow-sm">Past</span>' : (status === 'Today' ? '<span class="badge rounded-pill bg-danger text-white border shadow-sm">Today</span>' : '')}
+              </div>
+            </div>
+
+            <div class="event-card-body">
+              <div class="event-organizer-row">
+                <img src="${orgLogo}" alt="${evt.organizer.replace(/"/g, '&quot;')}" class="event-organizer-logo">
+                <span class="event-organizer-name text-truncate">${evt.organizer}</span>
+              </div>
+
+              <h4 class="event-card-title mb-2" title="${evt.title.replace(/"/g, '&quot;')}">${evt.title}</h4>
+
+              <div class="event-meta-list">
+                <div class="event-meta-item">
+                  <i class="bi bi-geo-alt-fill"></i>
+                  <span class="text-truncate">${evt.location}</span>
+                </div>
+                <div class="event-meta-item">
+                  <i class="bi bi-clock"></i>
+                  <span>${evt.time}</span>
+                </div>
+                <div class="event-meta-item">
+                  <i class="bi bi-people"></i>
+                  <span class="text-truncate">${evt.audience}</span>
+                </div>
+              </div>
+
+              <div class="event-card-footer">
+                <div>
+                  <span class="badge bg-secondary-subtle text-secondary border extra-small">${evt.entryFee || 'Free Entry'}</span>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 view-event-details-btn" data-event-id="${evt.id}">
+                  <i class="bi bi-info-circle me-1"></i> View Details
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    container.querySelectorAll('.view-event-details-btn').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const evtId = btn.getAttribute('data-event-id');
+        openEventDetailsModal(evtId);
+      };
+    });
+
+    container.querySelectorAll('.campus-event-card').forEach(card => {
+      card.style.cursor = 'pointer';
+      card.onclick = (e) => {
+        if (e.target.closest('.view-event-details-btn')) return;
+        const evtId = card.getAttribute('data-event-id');
+        if (evtId) openEventDetailsModal(evtId);
+      };
+    });
+  }
+
+  function openEventDetailsModal(eventId) {
+    const eventsList = getAllEvents();
+    const evt = eventsList.find(e => e.id === eventId);
+    if (!evt) return;
+
+    currentlySelectedEvent = evt;
+
+    const modalEl = document.getElementById('eventDetailsModal');
+    if (!modalEl) return;
+
+    const bannerEl = document.getElementById('modalEventBanner');
+    const titleEl = document.getElementById('modalEventTitle');
+    const catBadgeEl = document.getElementById('modalEventCategoryBadge');
+    const statusBadgeEl = document.getElementById('modalEventStatusBadge');
+    const orgLogoEl = document.getElementById('modalEventOrganizerLogo');
+    const orgNameEl = document.getElementById('modalEventOrganizerName');
+    const orgRoleEl = document.getElementById('modalEventOrganizerRole');
+    const orgSubEl = document.getElementById('modalEventOrganizerSub');
+    const dateEl = document.getElementById('modalEventDate');
+    const timeEl = document.getElementById('modalEventTime');
+    const locEl = document.getElementById('modalEventLocation');
+    const audEl = document.getElementById('modalEventAudience');
+    const feeEl = document.getElementById('modalEventEntryFee');
+    const deadlineEl = document.getElementById('modalEventDeadline');
+    const descEl = document.getElementById('modalEventDescription');
+    const highlightsWrap = document.getElementById('modalEventHighlightsWrap');
+    const highlightsList = document.getElementById('modalEventHighlightsList');
+    const contactEl = document.getElementById('modalEventContact');
+
+    if (bannerEl) bannerEl.src = normalizeImgUrl(evt.imageUrl);
+    if (titleEl) titleEl.innerText = evt.title;
+    if (catBadgeEl) {
+      catBadgeEl.innerText = evt.category;
+      catBadgeEl.className = `badge rounded-pill ${evt.categoryClass || 'bg-primary-subtle text-primary border border-primary-subtle'}`;
+    }
+    if (statusBadgeEl) {
+      statusBadgeEl.innerText = getEventDynamicStatus(evt);
+    }
+    if (orgLogoEl) orgLogoEl.src = evt.organizerLogo ? normalizeImgUrl(evt.organizerLogo) : 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=150&auto=format&fit=crop';
+    if (orgNameEl) orgNameEl.innerText = evt.organizer;
+    if (orgRoleEl) orgRoleEl.innerText = evt.organizerRole || 'Official University Club & Chapter';
+    if (orgSubEl) orgSubEl.innerHTML = `<i class="bi bi-people me-1"></i> Organized by ${evt.organizer}`;
+    if (dateEl) dateEl.innerText = `${evt.date}${evt.year ? `, ${evt.year}` : ''}`;
+    if (timeEl) timeEl.innerText = evt.time;
+    if (locEl) locEl.innerText = `${evt.location}${evt.venueDetail ? ` (${evt.venueDetail})` : ''}`;
+    if (audEl) audEl.innerText = evt.audience;
+    if (feeEl) feeEl.innerText = evt.entryFee;
+    if (deadlineEl) deadlineEl.innerText = evt.registrationDeadline || 'Walk-in Welcome';
+    if (descEl) descEl.innerText = evt.description;
+    if (contactEl) contactEl.innerText = `${evt.contactEmail || 'events@university.edu'}${evt.contactPhone ? ` • ${evt.contactPhone}` : ''}`;
+
+    if (highlightsWrap && highlightsList) {
+      if (Array.isArray(evt.highlights) && evt.highlights.length > 0) {
+        highlightsWrap.classList.remove('d-none');
+        highlightsList.innerHTML = evt.highlights.map(h => `
+          <li class="d-flex align-items-start gap-2 small text-muted">
+            <i class="bi bi-check-circle-fill text-success flex-shrink-0 mt-1"></i>
+            <span>${h}</span>
+          </li>
+        `).join('');
+      } else {
+        highlightsWrap.classList.add('d-none');
+      }
+    }
+
+    if (typeof bootstrap !== 'undefined') {
+      const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modalInstance.show();
+    }
+  }
+
+  function bindEventModalActions() {
+    const regBtn = document.getElementById('modalEventRegisterBtn');
+    if (regBtn) {
+      regBtn.onclick = () => {
+        if (!currentlySelectedEvent) return;
+        const currentUser = getCurrentUser();
+        const studentName = currentUser ? currentUser.name : 'Student';
+        
+        if (currentlySelectedEvent.registrationUrl && currentlySelectedEvent.registrationUrl.startsWith('http') && !currentlySelectedEvent.registrationUrl.includes('google.com')) {
+          showToast(`Opening registration portal for ${currentlySelectedEvent.title}...`, 'info');
+          window.open(currentlySelectedEvent.registrationUrl, '_blank');
+        } else {
+          showToast(`Seat Confirmed for ${studentName}! Registration details recorded for ${currentlySelectedEvent.title}.`, 'success');
+          const modalEl = document.getElementById('eventDetailsModal');
+          if (modalEl && typeof bootstrap !== 'undefined') {
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            if (modalInstance) modalInstance.hide();
+          }
+        }
+      };
+    }
+
+    const shareBtn = document.getElementById('modalEventShareBtn');
+    if (shareBtn) {
+      shareBtn.onclick = async () => {
+        if (!currentlySelectedEvent) return;
+        const shareData = {
+          title: currentlySelectedEvent.title,
+          text: `Check out ${currentlySelectedEvent.title} on MULens: ${currentlySelectedEvent.date} at ${currentlySelectedEvent.location}`,
+          url: window.location.href.split('#')[0] + '#upcoming-events'
+        };
+
+        if (navigator.share) {
+          try {
+            await navigator.share(shareData);
+          } catch (e) {
+            // fallback
+          }
+        } else {
+          try {
+            await navigator.clipboard.writeText(`${shareData.title} - ${shareData.url}`);
+            showToast('Event details copied to clipboard!', 'success');
+          } catch (e) {
+            showToast('Event link copied!', 'info');
+          }
+        }
+      };
+    }
+
+    const calBtn = document.getElementById('modalEventCalendarBtn');
+    if (calBtn) {
+      calBtn.onclick = () => {
+        if (!currentlySelectedEvent) return;
+        const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(currentlySelectedEvent.title)}&details=${encodeURIComponent(currentlySelectedEvent.description)}&location=${encodeURIComponent(currentlySelectedEvent.location)}`;
+        window.open(gcalUrl, '_blank');
+        showToast('Opening Google Calendar...', 'info');
+      };
+    }
+  }
+
+  function bindAllEventsModalListeners() {
+    document.querySelectorAll('#modal-event-category-filters .event-category-pill').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('#modal-event-category-filters .event-category-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        allEventsModalActiveCategory = btn.getAttribute('data-event-category') || 'all';
+        renderAllEventsModal();
+      };
+    });
+
+    const modalSearch = document.getElementById('modal-events-search-input');
+    if (modalSearch) {
+      modalSearch.oninput = () => {
+        allEventsModalSearchQuery = modalSearch.value.trim();
+        renderAllEventsModal();
+      };
+    }
+
+    const modalEl = document.getElementById('allEventsModal');
+    if (modalEl) {
+      modalEl.addEventListener('show.bs.modal', () => {
+        renderAllEventsModal();
+      });
+    }
+  }
+
+  function renderAdminEventsManager() {
+    const tableBody = document.getElementById('admin-events-table-body');
+    const countBadge = document.getElementById('admin-events-count-badge');
+    const filterAllCount = document.getElementById('admin-filter-all-count');
+    const filterUpcomingCount = document.getElementById('admin-filter-upcoming-count');
+    const filterTodayCount = document.getElementById('admin-filter-today-count');
+    const filterPastCount = document.getElementById('admin-filter-past-count');
+
+    if (!tableBody) return;
+
+    const eventsList = getAllEvents();
+
+    let totalCount = eventsList.length;
+    let upcomingCount = 0;
+    let todayCount = 0;
+    let pastCount = 0;
+
+    eventsList.forEach(evt => {
+      const st = getEventDynamicStatus(evt);
+      if (st === 'Today') todayCount++;
+      else if (st === 'Past') pastCount++;
+      else upcomingCount++;
+    });
+
+    if (countBadge) countBadge.innerText = `${totalCount} Events`;
+    if (filterAllCount) filterAllCount.innerText = totalCount;
+    if (filterUpcomingCount) filterUpcomingCount.innerText = upcomingCount;
+    if (filterTodayCount) filterTodayCount.innerText = todayCount;
+    if (filterPastCount) filterPastCount.innerText = pastCount;
+
+    let displayList = eventsList.filter(evt => {
+      const st = getEventDynamicStatus(evt);
+      if (adminEventsFilter === 'upcoming' && st !== 'Upcoming') return false;
+      if (adminEventsFilter === 'today' && st !== 'Today') return false;
+      if (adminEventsFilter === 'past' && st !== 'Past') return false;
+
+      if (adminEventsSearch) {
+        const q = adminEventsSearch.toLowerCase();
+        const haystack = `${evt.title} ${evt.organizer} ${evt.category} ${evt.location} ${evt.description}`.toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+      return true;
+    });
+
+    if (displayList.length === 0) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="7" class="text-center py-5 text-muted">
+            <i class="bi bi-calendar-x display-6 d-block mb-2 text-secondary opacity-50"></i>
+            <span class="fw-semibold">No campus events found</span>
+            <p class="extra-small mb-0 text-muted">Click "+ Add New Event" above to create your first event.</p>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tableBody.innerHTML = displayList.map(evt => {
+      const bannerImg = normalizeImgUrl(evt.imageUrl);
+      const orgLogo = evt.organizerLogo ? normalizeImgUrl(evt.organizerLogo) : 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=150&auto=format&fit=crop';
+      const status = getEventDynamicStatus(evt);
+      let statusBadge = '<span class="badge bg-success-subtle text-success border border-success-subtle">Upcoming</span>';
+      if (status === 'Today') {
+        statusBadge = '<span class="badge bg-danger text-white border border-danger">Live Today</span>';
+      } else if (status === 'Past') {
+        statusBadge = '<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Past Event</span>';
+      }
+
+      return `
+        <tr>
+          <td>
+            <img src="${bannerImg}" alt="${evt.title.replace(/"/g, '&quot;')}" class="rounded border shadow-sm" style="width: 58px; height: 42px; object-fit: cover;">
+          </td>
+          <td>
+            <div class="fw-bold text-truncate" style="max-width: 200px;">${evt.title}</div>
+            <div class="d-flex align-items-center gap-1 mt-1">
+              <span class="badge bg-primary-subtle text-primary extra-small">${evt.category}</span>
+              <span class="text-muted extra-small text-truncate" style="max-width: 140px;">${evt.audience}</span>
+            </div>
+          </td>
+          <td>
+            <div class="fw-semibold text-truncate" style="max-width: 130px;">${evt.date}${evt.year ? `, ${evt.year}` : ''}</div>
+            <div class="text-muted extra-small"><i class="bi bi-clock me-1"></i>${evt.time}</div>
+          </td>
+          <td>
+            <div class="text-truncate" style="max-width: 140px;"><i class="bi bi-geo-alt-fill text-danger me-1"></i>${evt.location}</div>
+            <div class="text-muted extra-small text-truncate" style="max-width: 140px;">${evt.venueDetail || ''}</div>
+          </td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <img src="${orgLogo}" alt="${evt.organizer}" class="rounded-circle border" style="width: 22px; height: 22px; object-fit: cover;">
+              <span class="fw-semibold text-truncate extra-small" style="max-width: 110px;">${evt.organizer}</span>
+            </div>
+          </td>
+          <td>
+            ${statusBadge}
+          </td>
+          <td class="text-end">
+            <div class="btn-group btn-group-sm">
+              <button type="button" class="btn btn-outline-info btn-xs preview-admin-event-btn" data-id="${evt.id}" title="Preview Event Modal">
+                <i class="bi bi-eye-fill"></i>
+              </button>
+              <button type="button" class="btn btn-outline-primary btn-xs edit-admin-event-btn" data-id="${evt.id}" title="Edit Event Details">
+                <i class="bi bi-pencil-fill"></i>
+              </button>
+              <button type="button" class="btn btn-outline-danger btn-xs delete-admin-event-btn" data-id="${evt.id}" title="Delete Event">
+                <i class="bi bi-trash-fill"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    tableBody.querySelectorAll('.preview-admin-event-btn').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const evtId = btn.getAttribute('data-id');
+        openEventDetailsModal(evtId);
+      };
+    });
+
+    tableBody.querySelectorAll('.edit-admin-event-btn').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const evtId = btn.getAttribute('data-id');
+        const evt = eventsList.find(ev => ev.id === evtId);
+        if (evt) openAdminEventModal(evt);
+      };
+    });
+
+    function handleEventActionResponse(resp, defaultFailMsg = 'Action failed') {
+      if (!resp || resp.networkError || resp.status === 0) {
+        showToast('Unable to connect to Campus Events server.', 'danger');
+        return false;
+      }
+      if (!resp.ok) {
+        if (resp.status === 401) {
+          sessionStorage.removeItem('mulens_admin_secret');
+          showToast('Admin verification failed. Please verify again.', 'danger');
+          return false;
+        }
+        if (resp.status === 404) {
+          showToast('Campus Events server endpoint was not found.', 'danger');
+          return false;
+        }
+        const errMsg = resp.body ? (resp.body.error || resp.body.message || JSON.stringify(resp.body)) : defaultFailMsg;
+        showToast(`Server error: ${errMsg}`, 'danger');
+        return false;
+      }
+      if (resp.body && resp.body.success) {
+        return true;
+      }
+      const errMsg = resp.body ? (resp.body.error || resp.body.message || JSON.stringify(resp.body)) : defaultFailMsg;
+      showToast(`Server error: ${errMsg}`, 'danger');
+      return false;
+    }
+
+    tableBody.querySelectorAll('.delete-admin-event-btn').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const evtId = btn.getAttribute('data-id');
+        const evt = eventsList.find(ev => ev.id === evtId);
+        if (!evt) return;
+
+        showCustomDeleteModal(async () => {
+          const adminSecret = await ensureAdminSecret();
+          if (!adminSecret) return;
+
+          showToast(`Deleting event "${evt.title}"...`, 'info');
+          const resp = await manageEventOnServer({
+            action: 'delete',
+            eventId: evt.id,
+            adminSecret
+          });
+
+          if (!handleEventActionResponse(resp, 'Failed to delete event')) {
+            return;
+          }
+
+          window.__EVENTS_GLOBAL = resp.body.events || [];
+          renderUpcomingEvents();
+          renderAllEventsModal();
+          renderAdminEventsManager();
+          showToast(`Event "${evt.title}" deleted successfully.`, 'success');
+        });
+      };
+    });
+  }
+
+  function openAdminEventModal(eventToEdit = null) {
+    const modalEl = document.getElementById('adminEventModal');
+    const titleEl = document.getElementById('adminEventModalTitle');
+    const formEl = document.getElementById('admin-event-form');
+    if (!modalEl || !formEl) return;
+
+    formEl.reset();
+
+    const setInputVal = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.value = (val !== undefined && val !== null) ? val : '';
+    };
+
+    if (eventToEdit) {
+      if (titleEl) titleEl.innerText = `Edit Event: ${eventToEdit.title}`;
+      setInputVal('adminEventId', eventToEdit.id || '');
+      setInputVal('adminEventTitle', eventToEdit.title || '');
+      setInputVal('adminEventCategory', eventToEdit.category || 'Tech & Coding');
+      setInputVal('adminEventStatus', eventToEdit.status || 'Upcoming');
+      setInputVal('adminEventDate', eventToEdit.date || '');
+      setInputVal('adminEventDay', eventToEdit.day || '15');
+      setInputVal('adminEventMonth', eventToEdit.month || 'MAY');
+      setInputVal('adminEventTime', eventToEdit.time || '');
+      setInputVal('adminEventLocation', eventToEdit.location || '');
+      setInputVal('adminEventVenueDetail', eventToEdit.venueDetail || '');
+      setInputVal('adminEventOrganizer', eventToEdit.organizer || '');
+      setInputVal('adminEventOrganizerRole', eventToEdit.organizerRole || '');
+      setInputVal('adminEventOrganizerLogo', eventToEdit.organizerLogo || '');
+      setInputVal('adminEventImgUrl', eventToEdit.imageUrl || '');
+      setInputVal('adminEventAudience', eventToEdit.audience || '');
+      setInputVal('adminEventEntryFee', eventToEdit.entryFee || 'Free Entry');
+      setInputVal('adminEventDeadline', eventToEdit.registrationDeadline || '');
+      setInputVal('adminEventRegUrl', eventToEdit.registrationUrl || '');
+      setInputVal('adminEventContactEmail', eventToEdit.contactEmail || '');
+      setInputVal('adminEventContactPhone', eventToEdit.contactPhone || '');
+      setInputVal('adminEventDesc', eventToEdit.description || '');
+      setInputVal('adminEventHighlights', Array.isArray(eventToEdit.highlights) ? eventToEdit.highlights.join('\n') : '');
+    } else {
+      if (titleEl) titleEl.innerText = 'Add New Campus Event';
+      setInputVal('adminEventId', '');
+      setInputVal('adminEventStatus', 'Upcoming');
+      setInputVal('adminEventDay', '15');
+      setInputVal('adminEventMonth', 'MAY');
+      setInputVal('adminEventEntryFee', 'Free Entry with Student ID');
+      setInputVal('adminEventAudience', 'Open for All Students');
+      setInputVal('adminEventOrganizerLogo', 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=150&auto=format&fit=crop');
+    }
+
+    if (typeof bootstrap !== 'undefined') {
+      const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modalInstance.show();
+    }
+  }
+
+  function bindAdminEventsListeners() {
+    function handleEventActionResponse(resp, defaultFailMsg = 'Action failed') {
+      if (!resp || resp.networkError || resp.status === 0) {
+        showToast('Unable to connect to Campus Events server.', 'danger');
+        return false;
+      }
+      if (!resp.ok) {
+        if (resp.status === 401) {
+          sessionStorage.removeItem('mulens_admin_secret');
+          showToast('Admin verification failed. Please verify again.', 'danger');
+          return false;
+        }
+        if (resp.status === 404) {
+          showToast('Campus Events server endpoint was not found.', 'danger');
+          return false;
+        }
+        const errMsg = resp.body ? (resp.body.error || resp.body.message || JSON.stringify(resp.body)) : defaultFailMsg;
+        showToast(`Server error: ${errMsg}`, 'danger');
+        return false;
+      }
+      if (resp.body && resp.body.success) {
+        return true;
+      }
+      const errMsg = resp.body ? (resp.body.error || resp.body.message || JSON.stringify(resp.body)) : defaultFailMsg;
+      showToast(`Server error: ${errMsg}`, 'danger');
+      return false;
+    }
+
+    const addBtn = document.getElementById('admin-add-event-btn');
+    if (addBtn) {
+      addBtn.onclick = () => openAdminEventModal(null);
+    }
+
+    document.querySelectorAll('.preset-event-img, .admin-event-img-preset').forEach(btn => {
+      btn.onclick = () => {
+        const url = btn.getAttribute('data-url');
+        const input = document.getElementById('adminEventImgUrl') || document.getElementById('adminEventImageUrl');
+        if (input && url) {
+          input.value = url;
+          showToast('Applied sample event banner image', 'info');
+        }
+      };
+    });
+
+    document.querySelectorAll('.admin-event-filter-pill').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.admin-event-filter-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        adminEventsFilter = btn.getAttribute('data-status-filter') || 'all';
+        renderAdminEventsManager();
+      };
+    });
+
+    const searchInput = document.getElementById('admin-events-search-input');
+    if (searchInput) {
+      searchInput.oninput = () => {
+        adminEventsSearch = searchInput.value.trim();
+        renderAdminEventsManager();
+      };
+    }
+
+    const resetBtn = document.getElementById('admin-reset-events-btn');
+    if (resetBtn) {
+      resetBtn.onclick = async () => {
+        showCustomDeleteModal(async () => {
+          const adminSecret = await ensureAdminSecret();
+          if (!adminSecret) return;
+
+          showToast('Resetting campus events to initial default schedule...', 'info');
+          const resp = await manageEventOnServer({
+            action: 'reset',
+            adminSecret
+          });
+
+          if (!handleEventActionResponse(resp, 'Failed to reset events')) {
+            return;
+          }
+
+          window.__EVENTS_GLOBAL = resp.body.events || [];
+          renderUpcomingEvents();
+          renderAllEventsModal();
+          renderAdminEventsManager();
+          showToast('Campus events reset to defaults successfully.', 'success');
+        });
+      };
+    }
+
+    const formEl = document.getElementById('admin-event-form');
+    if (formEl) {
+      formEl.onsubmit = async (e) => {
+        e.preventDefault();
+
+        const getVal = (id, def = '') => {
+          const el = document.getElementById(id);
+          return el ? el.value.trim() : def;
+        };
+
+        const existingId = getVal('adminEventId');
+        const isEdit = !!existingId;
+
+        const title = getVal('adminEventTitle');
+        const category = getVal('adminEventCategory', 'Tech & Coding');
+        const status = getVal('adminEventStatus', 'Upcoming');
+        const date = getVal('adminEventDate');
+        let day = getVal('adminEventDay', '15');
+        let month = getVal('adminEventMonth', 'MAY');
+        const time = getVal('adminEventTime');
+        const location = getVal('adminEventLocation');
+        const venueDetail = getVal('adminEventVenueDetail');
+        const organizer = getVal('adminEventOrganizer');
+        const organizerRole = getVal('adminEventOrganizerRole');
+        const organizerLogo = getVal('adminEventOrganizerLogo');
+        const imageUrl = getVal('adminEventImgUrl') || getVal('adminEventImageUrl');
+        const audience = getVal('adminEventAudience');
+        const entryFee = getVal('adminEventEntryFee');
+        const regDeadline = getVal('adminEventDeadline') || getVal('adminEventRegDeadline');
+        const regUrl = getVal('adminEventRegUrl');
+        const contactEmail = getVal('adminEventContactEmail');
+        const contactPhone = getVal('adminEventContactPhone');
+        const description = getVal('adminEventDesc') || getVal('adminEventDescription');
+        const rawHighlights = getVal('adminEventHighlights');
+        const highlights = rawHighlights ? rawHighlights.split('\n').map(s => s.trim()).filter(Boolean) : [];
+
+        let year = new Date().getFullYear();
+        if (date) {
+          const parts = date.split(/[\s,]+/);
+          if (parts.length >= 3) {
+            const possibleYear = parseInt(parts[2], 10);
+            if (!isNaN(possibleYear)) year = possibleYear;
+          }
+          if (!day && parts.length >= 2) {
+            day = isNaN(parts[0]) ? parts[1] : parts[0];
+          }
+          if (!month && parts.length >= 2) {
+            month = isNaN(parts[0]) ? parts[0].substring(0, 3).toUpperCase() : parts[1].substring(0, 3).toUpperCase();
+          }
+        }
+
+        let categoryClass = 'bg-primary-subtle text-primary border-primary-subtle';
+        if (category.includes('Tech') || category.includes('Code')) categoryClass = 'bg-info-subtle text-info border-info-subtle';
+        else if (category.includes('Cultural') || category.includes('Art')) categoryClass = 'bg-warning-subtle text-warning border-warning-subtle';
+        else if (category.includes('Sport') || category.includes('Athletic')) categoryClass = 'bg-success-subtle text-success border-success-subtle';
+        else if (category.includes('Seminar') || category.includes('Workshop') || category.includes('Talk')) categoryClass = 'bg-secondary-subtle text-secondary border-secondary-subtle';
+        else if (category.includes('Music') || category.includes('Concert') || category.includes('Fest')) categoryClass = 'bg-danger-subtle text-danger border-danger-subtle';
+
+        const eventObj = {
+          id: isEdit ? existingId : ('evt_' + Date.now()),
+          title,
+          category,
+          categoryClass,
+          status,
+          day,
+          month,
+          year,
+          date: date || `${month} ${day}, ${year}`,
+          time: time || '10:00 AM - 04:00 PM',
+          location: location || 'Campus Main Auditorium',
+          venueDetail,
+          organizer: organizer || 'University Event Committee',
+          organizerRole: organizerRole || 'Official Student Chapter',
+          organizerLogo: organizerLogo || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=150&auto=format&fit=crop',
+          imageUrl: imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=1000&auto=format&fit=crop',
+          audience: audience || 'Open for All Students',
+          entryFee: entryFee || 'Free Entry',
+          registrationDeadline: regDeadline,
+          registrationUrl: regUrl,
+          contactEmail: contactEmail || 'events@university.edu',
+          contactPhone,
+          description: description || title,
+          highlights
+        };
+
+        const adminSecret = await ensureAdminSecret();
+        if (!adminSecret) return;
+
+        showToast(isEdit ? `Updating event "${title}"...` : `Creating event "${title}"...`, 'info');
+
+        const resp = await manageEventOnServer({
+          action: isEdit ? 'update' : 'create',
+          event: eventObj,
+          adminSecret
+        });
+
+        if (!handleEventActionResponse(resp, isEdit ? 'Failed to update event' : 'Failed to create event')) {
+          return;
+        }
+
+        window.__EVENTS_GLOBAL = resp.body.events || [];
+
+        const modalEl = document.getElementById('adminEventModal');
+        if (modalEl && typeof bootstrap !== 'undefined') {
+          const modalInstance = bootstrap.Modal.getInstance(modalEl);
+          if (modalInstance) modalInstance.hide();
+        }
+
+        renderUpcomingEvents();
+        renderAllEventsModal();
+        renderAdminEventsManager();
+        showToast(isEdit ? `Event "${title}" updated successfully!` : `Event "${title}" published to live campus schedule!`, 'success');
+      };
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // Campus Voices Community Wall & Moderation Engine
+  // --------------------------------------------------------------------------
+  let adminVoicesFilter = 'all';
+  let adminVoicesSearch = '';
+  let allVoicesModalFilter = 'all';
+  let pendingVoiceDeleteId = null;
+
+  function safeEscapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function getAllCampusVoices() {
+    if (window.__VOICES_GLOBAL && Array.isArray(window.__VOICES_GLOBAL.voices)) {
+      return window.__VOICES_GLOBAL.voices;
+    }
+    return [];
+  }
+
+  function getFeaturedVoiceId() {
+    if (window.__VOICES_GLOBAL && window.__VOICES_GLOBAL.featuredVoiceId) {
+      return window.__VOICES_GLOBAL.featuredVoiceId;
+    }
+    return null;
+  }
+
+  function getVoiceCategoryBadgeClass(category) {
+    const cat = (category || '').toLowerCase();
+    if (cat.includes('memory')) return 'voice-badge-memory';
+    if (cat.includes('appreciation')) return 'voice-badge-appreciation';
+    if (cat.includes('life')) return 'voice-badge-life';
+    if (cat.includes('club') || cat.includes('event')) return 'voice-badge-club';
+    if (cat.includes('suggestion')) return 'voice-badge-suggestion';
+    return 'voice-badge-memory';
+  }
+
+  function formatVoiceDate(dateStr) {
+    if (!dateStr) return 'Recently';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
+  function handleVoiceActionResponse(resp, defaultMsg = 'Operation failed') {
+    if (resp && resp.ok && resp.body && resp.body.success) {
+      return true;
+    }
+    if (resp && resp.status === 401) {
+      sessionStorage.removeItem('mulens_admin_secret');
+      showToast('Admin verification failed. Invalid or missing admin secret.', 'danger');
+      return false;
+    }
+    const errorMsg = (resp && resp.body && resp.body.error) || (resp && resp.error) || defaultMsg;
+    showToast(errorMsg, 'danger');
+    return false;
+  }
+
+  // Render Homepage Campus Voices section
+  function renderCampusVoices() {
+    const container = document.getElementById('campus-voices-container');
+    if (!container) return;
+
+    const totalBadge = document.getElementById('voices-total-badge');
+    const viewAllBtn = document.getElementById('view-all-voices-btn');
+
+    const allVoices = getAllCampusVoices();
+    const approvedVoices = allVoices.filter(v => v.status === 'approved');
+
+    if (totalBadge) {
+      totalBadge.innerText = approvedVoices.length;
+    }
+
+    if (viewAllBtn) {
+      if (approvedVoices.length > 3) {
+        viewAllBtn.classList.remove('d-none');
+      } else {
+        viewAllBtn.classList.add('d-none');
+      }
+    }
+
+    if (approvedVoices.length === 0) {
+      container.innerHTML = `
+        <div class="col-12">
+          <div class="glass-panel p-5 text-center rounded-4 border">
+            <div class="mb-3">
+              <i class="bi bi-chat-heart text-primary fs-1 opacity-75"></i>
+            </div>
+            <h4 class="font-heading fw-bold mb-2">Be The First Campus Voice</h4>
+            <p class="text-muted small mx-auto mb-4" style="max-width: 480px;">
+              Share a memorable university moment, faculty appreciation, festival reflection, or constructive thought for the Metropolitan University community.
+            </p>
+            <button type="button" class="btn btn-primary btn-sm px-4 rounded-pill fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#shareVoiceModal">
+              <i class="bi bi-pencil-square me-1"></i> Share Your Voice
+            </button>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    // Determine Featured Voice
+    const featuredId = getFeaturedVoiceId();
+    let featuredVoice = approvedVoices.find(v => v.id === featuredId);
+    if (!featuredVoice) {
+      featuredVoice = approvedVoices[0];
+    }
+
+    // Determine secondary voices (up to 2)
+    const secondaryVoices = approvedVoices.filter(v => v.id !== featuredVoice.id).slice(0, 2);
+
+    const renderCardHtml = (v, isFeatured = false) => {
+      const isAnon = !!v.anonymous;
+      const authorName = isAnon ? 'Anonymous Student' : (safeEscapeHtml(v.name) || 'Campus Creator');
+      const deptBatch = [v.department ? safeEscapeHtml(v.department) : 'Metropolitan University', v.batch ? safeEscapeHtml(v.batch) : ''].filter(Boolean).join(' • ');
+      const avatarUrl = isAnon
+        ? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150&auto=format&fit=crop'
+        : (v.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop');
+      const badgeClass = getVoiceCategoryBadgeClass(v.category);
+      const dateStr = formatVoiceDate(v.createdAt);
+
+      if (isFeatured) {
+        return `
+          <div class="col-lg-6 col-12 mb-3 mb-lg-0">
+            <div class="campus-voice-card featured-voice-card h-100 p-4 p-md-5 d-flex flex-column justify-content-between">
+              <div>
+                <div class="d-flex align-items-center justify-content-between gap-2 mb-4">
+                  <span class="featured-voice-pill">
+                    <i class="bi bi-star-fill"></i> Featured Voice
+                  </span>
+                  <span class="voice-category-badge ${badgeClass}">
+                    ${safeEscapeHtml(v.category || 'Campus Memory')}
+                  </span>
+                </div>
+                <div class="voice-quote-text font-serif mb-4" style="font-size: 1.15rem; line-height: 1.7;">
+                  "${safeEscapeHtml(v.text)}"
+                </div>
+              </div>
+              <div class="d-flex align-items-center justify-content-between pt-3 border-top mt-2">
+                <div class="d-flex align-items-center gap-3">
+                  <img src="${avatarUrl}" class="voice-avatar rounded-circle" alt="${authorName}" style="width: 44px; height: 44px; object-fit: cover;">
+                  <div>
+                    <div class="fw-bold small ${isAnon ? 'fst-italic text-muted' : ''}">${authorName}</div>
+                    <div class="text-muted extra-small">${deptBatch}</div>
+                  </div>
+                </div>
+                <div class="text-muted extra-small">
+                  <i class="bi bi-clock me-1"></i>${dateStr}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="campus-voice-card p-4 d-flex flex-column justify-content-between mb-3 last-mb-0 h-100">
+          <div>
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+              <span class="voice-category-badge ${badgeClass}">
+                ${safeEscapeHtml(v.category || 'Campus Memory')}
+              </span>
+              <span class="text-muted extra-small">
+                <i class="bi bi-clock me-1"></i>${dateStr}
+              </span>
+            </div>
+            <div class="voice-quote-text mb-3" style="font-size: 0.95rem; line-height: 1.6;">
+              "${safeEscapeHtml(v.text)}"
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-3 pt-3 border-top mt-auto">
+            <img src="${avatarUrl}" class="voice-avatar rounded-circle" alt="${authorName}" style="width: 36px; height: 36px; object-fit: cover;">
+            <div>
+              <div class="fw-bold extra-small ${isAnon ? 'fst-italic text-muted' : ''}">${authorName}</div>
+              <div class="text-muted extra-small" style="font-size: 0.72rem;">${deptBatch}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    };
+
+    if (secondaryVoices.length === 0) {
+      // Only 1 voice exists
+      container.innerHTML = `
+        <div class="col-lg-8 mx-auto col-12">
+          ${renderCardHtml(featuredVoice, true)}
+        </div>
+      `;
+    } else if (secondaryVoices.length === 1) {
+      // 2 voices exist
+      container.innerHTML = `
+        <div class="col-lg-6 col-12 mb-3 mb-lg-0">
+          ${renderCardHtml(featuredVoice, true)}
+        </div>
+        <div class="col-lg-6 col-12">
+          ${renderCardHtml(secondaryVoices[0], false)}
+        </div>
+      `;
+    } else {
+      // 3 or more voices
+      container.innerHTML = `
+        ${renderCardHtml(featuredVoice, true)}
+        <div class="col-lg-6 col-12 d-flex flex-column gap-3">
+          ${secondaryVoices.map(v => `<div>${renderCardHtml(v, false)}</div>`).join('')}
+        </div>
+      `;
+    }
+  }
+
+  // Render All Voices Modal Archive
+  function renderAllVoicesModal() {
+    const container = document.getElementById('all-voices-grid-container');
+    const emptyEl = document.getElementById('all-voices-empty');
+    if (!container) return;
+
+    const allVoices = getAllCampusVoices();
+    const approvedVoices = allVoices.filter(v => v.status === 'approved');
+
+    let filtered = approvedVoices;
+    if (allVoicesModalFilter && allVoicesModalFilter !== 'all') {
+      filtered = approvedVoices.filter(v => (v.category || '').toLowerCase() === allVoicesModalFilter.toLowerCase());
+    }
+
+    if (filtered.length === 0) {
+      container.innerHTML = '';
+      if (emptyEl) emptyEl.classList.remove('d-none');
+      return;
+    }
+
+    if (emptyEl) emptyEl.classList.add('d-none');
+
+    const featuredId = getFeaturedVoiceId();
+
+    container.innerHTML = filtered.map(v => {
+      const isAnon = !!v.anonymous;
+      const authorName = isAnon ? 'Anonymous Student' : (safeEscapeHtml(v.name) || 'Campus Creator');
+      const deptBatch = [v.department ? safeEscapeHtml(v.department) : 'Metropolitan University', v.batch ? safeEscapeHtml(v.batch) : ''].filter(Boolean).join(' • ');
+      const avatarUrl = isAnon
+        ? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150&auto=format&fit=crop'
+        : (v.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop');
+      const badgeClass = getVoiceCategoryBadgeClass(v.category);
+      const dateStr = formatVoiceDate(v.createdAt);
+      const isFeatured = String(v.id) === String(featuredId);
+
+      return `
+        <div class="col-md-6 col-lg-4 d-flex">
+          <div class="campus-voice-card p-4 d-flex flex-column justify-content-between w-100 ${isFeatured ? 'border-primary' : ''}">
+            <div>
+              <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+                <span class="voice-category-badge ${badgeClass}">
+                  ${safeEscapeHtml(v.category || 'Campus Memory')}
+                </span>
+                ${isFeatured ? '<span class="badge bg-warning text-dark extra-small"><i class="bi bi-star-fill me-1"></i>Featured</span>' : ''}
+              </div>
+              <div class="voice-quote-text mb-4" style="font-size: 0.95rem; line-height: 1.6;">
+                "${safeEscapeHtml(v.text)}"
+              </div>
+            </div>
+            <div class="d-flex align-items-center justify-content-between pt-3 border-top mt-auto">
+              <div class="d-flex align-items-center gap-2">
+                <img src="${avatarUrl}" class="voice-avatar rounded-circle" alt="${authorName}" style="width: 34px; height: 34px; object-fit: cover;">
+                <div class="text-truncate" style="max-width: 140px;">
+                  <div class="fw-bold extra-small text-truncate ${isAnon ? 'fst-italic text-muted' : ''}">${authorName}</div>
+                  <div class="text-muted extra-small text-truncate" style="font-size: 0.7rem;">${deptBatch}</div>
+                </div>
+              </div>
+              <div class="text-muted extra-small" style="font-size: 0.7rem;">
+                ${dateStr}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Render Admin Voices Manager Tab Pane
+  function renderAdminVoicesManager() {
+    const tableBody = document.getElementById('admin-voices-table-body');
+    const emptyState = document.getElementById('admin-voices-empty-state');
+    if (!tableBody) return;
+
+    const allVoices = getAllCampusVoices();
+    const featuredId = getFeaturedVoiceId();
+
+    const pendingCount = allVoices.filter(v => v.status === 'pending').length;
+    const approvedCount = allVoices.filter(v => v.status === 'approved').length;
+    const rejectedCount = allVoices.filter(v => v.status === 'rejected').length;
+
+    const countBadge = document.getElementById('admin-voices-count-badge');
+    const filterAllCount = document.getElementById('admin-voices-filter-all-count');
+    const filterPendingCount = document.getElementById('admin-voices-filter-pending-count');
+    const filterApprovedCount = document.getElementById('admin-voices-filter-approved-count');
+    const filterRejectedCount = document.getElementById('admin-voices-filter-rejected-count');
+
+    if (countBadge) countBadge.innerText = pendingCount > 0 ? `${pendingCount} Pending` : allVoices.length;
+    if (filterAllCount) filterAllCount.innerText = allVoices.length;
+    if (filterPendingCount) filterPendingCount.innerText = pendingCount;
+    if (filterApprovedCount) filterApprovedCount.innerText = approvedCount;
+    if (filterRejectedCount) filterRejectedCount.innerText = rejectedCount;
+
+    let filtered = allVoices;
+    if (adminVoicesFilter && adminVoicesFilter !== 'all') {
+      filtered = allVoices.filter(v => v.status === adminVoicesFilter);
+    }
+
+    if (adminVoicesSearch) {
+      const q = adminVoicesSearch.toLowerCase().trim();
+      filtered = filtered.filter(v => {
+        const text = `${v.text || ''} ${v.name || ''} ${v.department || ''} ${v.category || ''} ${v.batch || ''}`.toLowerCase();
+        return text.includes(q);
+      });
+    }
+
+    if (filtered.length === 0) {
+      tableBody.innerHTML = '';
+      if (emptyState) emptyState.classList.remove('d-none');
+      return;
+    }
+
+    if (emptyState) emptyState.classList.add('d-none');
+
+    tableBody.innerHTML = filtered.map(v => {
+      const isAnon = !!v.anonymous;
+      const authorName = safeEscapeHtml(v.name || (isAnon ? 'Anonymous' : 'Student'));
+      const dept = safeEscapeHtml(v.department || 'General');
+      const batch = safeEscapeHtml(v.batch || '-');
+      const badgeClass = getVoiceCategoryBadgeClass(v.category);
+      const isFeatured = String(v.id) === String(featuredId);
+      const dateStr = formatVoiceDate(v.createdAt);
+
+      let statusBadge = `<span class="badge bg-warning text-dark extra-small"><i class="bi bi-clock me-1"></i>Pending</span>`;
+      if (v.status === 'approved') {
+        statusBadge = `<span class="badge bg-success text-white extra-small"><i class="bi bi-check-circle me-1"></i>Published</span>`;
+      } else if (v.status === 'rejected') {
+        statusBadge = `<span class="badge bg-danger text-white extra-small"><i class="bi bi-x-circle me-1"></i>Rejected</span>`;
+      }
+
+      return `
+        <tr data-voice-id="${v.id}">
+          <td>
+            <span class="voice-category-badge ${badgeClass}">${safeEscapeHtml(v.category || 'Memory')}</span>
+          </td>
+          <td>
+            <div class="fw-semibold text-dark text-truncate" style="max-width: 280px;" title="${safeEscapeHtml(v.text)}">
+              "${safeEscapeHtml(v.text)}"
+            </div>
+            ${isFeatured ? '<span class="badge bg-warning text-dark extra-small mt-1"><i class="bi bi-star-fill me-1"></i>Featured on Homepage</span>' : ''}
+          </td>
+          <td>
+            <div class="fw-bold extra-small text-truncate">${authorName}</div>
+            ${isAnon ? '<span class="badge bg-secondary-subtle text-secondary extra-small">Anonymous Post</span>' : ''}
+          </td>
+          <td>
+            <div class="extra-small text-muted">${dept}</div>
+            <div class="extra-small text-muted" style="font-size: 0.7rem;">${batch}</div>
+          </td>
+          <td>
+            ${statusBadge}
+          </td>
+          <td>
+            <span class="text-muted extra-small">${dateStr}</span>
+          </td>
+          <td class="text-end">
+            <div class="btn-group btn-group-sm">
+              <button type="button" class="btn btn-outline-info btn-xs admin-voice-view-btn" data-id="${v.id}" title="View Details">
+                <i class="bi bi-eye-fill"></i>
+              </button>
+              ${v.status !== 'approved' ? `
+                <button type="button" class="btn btn-outline-success btn-xs admin-voice-approve-btn" data-id="${v.id}" title="Approve & Publish">
+                  <i class="bi bi-check-lg"></i> Approve
+                </button>
+              ` : ''}
+              ${v.status !== 'rejected' ? `
+                <button type="button" class="btn btn-outline-warning btn-xs admin-voice-reject-btn" data-id="${v.id}" title="Reject Submission">
+                  <i class="bi bi-x-lg"></i> Reject
+                </button>
+              ` : ''}
+              ${v.status === 'approved' ? `
+                <button type="button" class="btn ${isFeatured ? 'btn-warning' : 'btn-outline-primary'} btn-xs admin-voice-feature-btn" data-id="${v.id}" title="${isFeatured ? 'Remove as Featured Voice' : 'Set as Featured Voice'}">
+                  <i class="bi bi-star-fill"></i> ${isFeatured ? 'Featured' : 'Feature'}
+                </button>
+              ` : ''}
+              <button type="button" class="btn btn-outline-danger btn-xs admin-voice-delete-btn" data-id="${v.id}" title="Delete Voice">
+                <i class="bi bi-trash-fill"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    // Bind Admin Voices Row Actions
+    tableBody.querySelectorAll('.admin-voice-view-btn').forEach(btn => {
+      btn.onclick = () => {
+        const id = btn.getAttribute('data-id');
+        const voice = allVoices.find(v => String(v.id) === String(id));
+        if (!voice) return;
+
+        const idEl = document.getElementById('admin-view-voice-id');
+        const catEl = document.getElementById('admin-view-voice-category');
+        const statusEl = document.getElementById('admin-view-voice-status');
+        const textEl = document.getElementById('admin-view-voice-text');
+        const nameEl = document.getElementById('admin-view-voice-name');
+        const deptEl = document.getElementById('admin-view-voice-dept');
+        const batchEl = document.getElementById('admin-view-voice-batch');
+        const anonEl = document.getElementById('admin-view-voice-anon');
+        const dateEl = document.getElementById('admin-view-voice-date');
+        const actionsEl = document.getElementById('admin-view-voice-actions');
+
+        if (idEl) idEl.innerText = `ID: ${voice.id}`;
+        if (catEl) {
+          catEl.className = `voice-category-badge ${getVoiceCategoryBadgeClass(voice.category)}`;
+          catEl.innerText = voice.category || 'Campus Memory';
+        }
+        if (statusEl) {
+          statusEl.innerText = voice.status ? voice.status.toUpperCase() : 'PENDING';
+          statusEl.className = voice.status === 'approved' ? 'badge bg-success' : (voice.status === 'rejected' ? 'badge bg-danger' : 'badge bg-warning text-dark');
+        }
+        if (textEl) textEl.innerText = voice.text || '';
+        if (nameEl) nameEl.innerText = voice.name || (voice.anonymous ? 'Anonymous Submitter' : 'Unknown');
+        if (deptEl) deptEl.innerText = voice.department || '-';
+        if (batchEl) batchEl.innerText = voice.batch || '-';
+        if (anonEl) anonEl.innerText = voice.anonymous ? 'Yes (Name hidden publicly)' : 'No (Public author name)';
+        if (dateEl) dateEl.innerText = formatVoiceDate(voice.createdAt);
+
+        if (actionsEl) {
+          actionsEl.innerHTML = `
+            <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill" data-bs-dismiss="modal">Close</button>
+            ${voice.status !== 'approved' ? `
+              <button type="button" class="btn btn-success btn-sm px-4 rounded-pill fw-bold" id="modal-approve-voice-btn" data-id="${voice.id}">
+                <i class="bi bi-check-circle-fill me-1"></i> Approve & Publish
+              </button>
+            ` : ''}
+            ${voice.status !== 'rejected' ? `
+              <button type="button" class="btn btn-warning btn-sm px-4 rounded-pill fw-bold" id="modal-reject-voice-btn" data-id="${voice.id}">
+                <i class="bi bi-x-circle-fill me-1"></i> Reject
+              </button>
+            ` : ''}
+          `;
+
+          const modalApproveBtn = document.getElementById('modal-approve-voice-btn');
+          if (modalApproveBtn) {
+            modalApproveBtn.onclick = async () => {
+              const modalEl = document.getElementById('viewVoiceModal');
+              if (modalEl && typeof bootstrap !== 'undefined') {
+                const inst = bootstrap.Modal.getInstance(modalEl);
+                if (inst) inst.hide();
+              }
+              await executeAdminVoiceAction('approve', voice.id);
+            };
+          }
+
+          const modalRejectBtn = document.getElementById('modal-reject-voice-btn');
+          if (modalRejectBtn) {
+            modalRejectBtn.onclick = async () => {
+              const modalEl = document.getElementById('viewVoiceModal');
+              if (modalEl && typeof bootstrap !== 'undefined') {
+                const inst = bootstrap.Modal.getInstance(modalEl);
+                if (inst) inst.hide();
+              }
+              await executeAdminVoiceAction('reject', voice.id);
+            };
+          }
+        }
+
+        const modalEl = document.getElementById('viewVoiceModal');
+        if (modalEl && typeof bootstrap !== 'undefined') {
+          const inst = bootstrap.Modal.getOrCreateInstance(modalEl);
+          inst.show();
+        }
+      };
+    });
+
+    tableBody.querySelectorAll('.admin-voice-approve-btn').forEach(btn => {
+      btn.onclick = async () => {
+        const id = btn.getAttribute('data-id');
+        await executeAdminVoiceAction('approve', id);
+      };
+    });
+
+    tableBody.querySelectorAll('.admin-voice-reject-btn').forEach(btn => {
+      btn.onclick = async () => {
+        const id = btn.getAttribute('data-id');
+        await executeAdminVoiceAction('reject', id);
+      };
+    });
+
+    tableBody.querySelectorAll('.admin-voice-feature-btn').forEach(btn => {
+      btn.onclick = async () => {
+        const id = btn.getAttribute('data-id');
+        const isCurFeatured = String(id) === String(featuredId);
+        await executeAdminVoiceAction(isCurFeatured ? 'unfeature' : 'feature', id);
+      };
+    });
+
+    tableBody.querySelectorAll('.admin-voice-delete-btn').forEach(btn => {
+      btn.onclick = () => {
+        const id = btn.getAttribute('data-id');
+        const voice = allVoices.find(v => String(v.id) === String(id));
+        pendingVoiceDeleteId = id;
+
+        const previewEl = document.getElementById('delete-voice-preview-text');
+        if (previewEl && voice) {
+          previewEl.innerText = `"${voice.text.substring(0, 120)}${voice.text.length > 120 ? '...' : ''}" — ${voice.name || (voice.anonymous ? 'Anonymous' : 'Student')}`;
+        }
+
+        const modalEl = document.getElementById('deleteVoiceConfirmModal');
+        if (modalEl && typeof bootstrap !== 'undefined') {
+          const inst = bootstrap.Modal.getOrCreateInstance(modalEl);
+          inst.show();
+        }
+      };
+    });
+  }
+
+  async function executeAdminVoiceAction(action, voiceId) {
+    const adminSecret = await ensureAdminSecret();
+    if (!adminSecret) return;
+
+    showToast(`Processing voice ${action}...`, 'info');
+
+    const resp = await manageVoiceOnServer({
+      action,
+      voiceId,
+      adminSecret
+    });
+
+    if (!handleVoiceActionResponse(resp, `Failed to ${action} voice submission`)) {
+      return;
+    }
+
+    if (resp.body && Array.isArray(resp.body.voices)) {
+      window.__VOICES_GLOBAL = {
+        voices: resp.body.voices,
+        featuredVoiceId: resp.body.featuredVoiceId || null
+      };
+    }
+
+    renderCampusVoices();
+    renderAllVoicesModal();
+    renderAdminVoicesManager();
+
+    const actionLabels = {
+      approve: 'Campus Voice approved and published!',
+      reject: 'Campus Voice marked as rejected.',
+      feature: 'Set as Featured Campus Voice on homepage!',
+      unfeature: 'Removed from Featured status.',
+      delete: 'Campus Voice permanently deleted.'
+    };
+
+    showToast(actionLabels[action] || `Voice ${action} completed successfully.`, 'success');
+  }
+
+  function bindCampusVoicesListeners() {
+    // 1. Character counter on share voice textarea
+    const voiceTextarea = document.getElementById('voiceSubmitText');
+    const charCounter = document.getElementById('voice-char-count');
+    if (voiceTextarea && charCounter) {
+      voiceTextarea.oninput = () => {
+        const len = voiceTextarea.value.length;
+        charCounter.innerText = len;
+        if (len > 400) {
+          charCounter.classList.add('text-danger');
+        } else {
+          charCounter.classList.remove('text-danger');
+        }
+      };
+    }
+
+    // 2. Pre-fill user details on Share Voice Modal show
+    const shareModalEl = document.getElementById('shareVoiceModal');
+    if (shareModalEl) {
+      shareModalEl.addEventListener('show.bs.modal', () => {
+        const currentUser = getCurrentUser();
+        const nameInput = document.getElementById('voiceSubmitName');
+        const deptInput = document.getElementById('voiceSubmitDept');
+        const userBanner = document.getElementById('voice-user-info-text');
+
+        if (currentUser) {
+          if (nameInput && !nameInput.value) nameInput.value = currentUser.name || '';
+          if (deptInput && !deptInput.value) deptInput.value = currentUser.dept || '';
+          if (userBanner) {
+            userBanner.innerText = `Submitting as ${currentUser.name}. Your submission will be reviewed by campus moderators before going live.`;
+          }
+        }
+      });
+    }
+
+    // 3. Share Voice Form Submission
+    const shareForm = document.getElementById('share-voice-form');
+    if (shareForm) {
+      shareForm.onsubmit = async (e) => {
+        e.preventDefault();
+
+        const getVal = (id, def = '') => {
+          const el = document.getElementById(id);
+          return el ? el.value.trim() : def;
+        };
+
+        const text = getVal('voiceSubmitText');
+        const category = getVal('voiceSubmitCategory', 'Campus Memory');
+        const name = getVal('voiceSubmitName');
+        const department = getVal('voiceSubmitDept');
+        const batch = getVal('voiceSubmitBatch');
+        const anonymous = !!document.getElementById('voiceSubmitAnonymous')?.checked;
+
+        if (!text || text.length < 5) {
+          showToast('Please enter a voice or thought (at least 5 characters).', 'warning');
+          return;
+        }
+
+        const submitBtn = document.getElementById('submitVoiceBtn');
+        const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+
+        try {
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Submitting...`;
+          }
+
+          const currentUser = getCurrentUser();
+          const payload = {
+            text,
+            category,
+            name: name || (currentUser ? currentUser.name : 'Campus Student'),
+            department: department || (currentUser ? currentUser.dept : 'Metropolitan University'),
+            batch,
+            anonymous,
+            userId: currentUser ? currentUser.id : null,
+            avatarUrl: currentUser ? currentUser.avatar : null
+          };
+
+          const resp = await submitCampusVoice(payload);
+
+          if (resp && resp.ok && resp.body && resp.body.success) {
+            showToast('🟢 Your Campus Voice has been submitted! It will appear publicly once approved by campus moderators.', 'success');
+
+            shareForm.reset();
+            if (charCounter) charCounter.innerText = '0';
+
+            const modalInstance = (window.bootstrap && bootstrap.Modal)
+              ? bootstrap.Modal.getInstance(shareModalEl)
+              : null;
+            if (modalInstance) modalInstance.hide();
+
+            // Refresh authoritative global voices from storage immediately
+            try {
+              const freshVoices = await fetchAllCampusVoices();
+              if (freshVoices && Array.isArray(freshVoices.voices)) {
+                window.__VOICES_GLOBAL = {
+                  voices: freshVoices.voices,
+                  featuredVoiceId: freshVoices.featuredVoiceId || null
+                };
+                renderCampusVoices();
+                renderAllVoicesModal();
+                renderAdminVoicesManager();
+              }
+            } catch (fetchErr) {
+              console.warn('[Post-submit voices refresh error]:', fetchErr);
+            }
+          } else {
+            const err = (resp && resp.body && resp.body.error) || (resp && resp.error) || 'Failed to submit voice.';
+            showToast(`🔴 ${err}`, 'danger');
+          }
+        } catch (err) {
+          console.error('[Voice Submit Error]:', err);
+          showToast(`🔴 Error: ${err.message || 'Submission failed'}`, 'danger');
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnHtml;
+          }
+        }
+      };
+    }
+
+    // 4. All Voices Modal category filtering & share button
+    const allVoicesModalEl = document.getElementById('allVoicesModal');
+    if (allVoicesModalEl) {
+      allVoicesModalEl.addEventListener('show.bs.modal', () => {
+        renderAllVoicesModal();
+      });
+
+      allVoicesModalEl.querySelectorAll('.voice-modal-filter-btn').forEach(btn => {
+        btn.onclick = () => {
+          allVoicesModalEl.querySelectorAll('.voice-modal-filter-btn').forEach(b => {
+            b.classList.remove('btn-primary', 'active');
+            b.classList.add('btn-outline-secondary');
+          });
+          btn.classList.remove('btn-outline-secondary');
+          btn.classList.add('btn-primary', 'active');
+
+          allVoicesModalFilter = btn.getAttribute('data-category') || 'all';
+          renderAllVoicesModal();
+        };
+      });
+
+      const modalShareBtn = document.getElementById('all-voices-modal-share-btn');
+      if (modalShareBtn) {
+        modalShareBtn.onclick = () => {
+          const allModalInst = (window.bootstrap && bootstrap.Modal)
+            ? bootstrap.Modal.getInstance(allVoicesModalEl)
+            : null;
+          if (allModalInst) allModalInst.hide();
+
+          const shareModalEl = document.getElementById('shareVoiceModal');
+          if (shareModalEl && typeof bootstrap !== 'undefined') {
+            const shareInst = bootstrap.Modal.getOrCreateInstance(shareModalEl);
+            setTimeout(() => shareInst.show(), 250);
+          }
+        };
+      }
+    }
+
+    // 5. Delete Voice confirmation modal confirm button
+    const confirmDeleteBtn = document.getElementById('confirm-delete-voice-btn');
+    if (confirmDeleteBtn) {
+      confirmDeleteBtn.onclick = async () => {
+        if (!pendingVoiceDeleteId) return;
+
+        const deleteModalEl = document.getElementById('deleteVoiceConfirmModal');
+        if (deleteModalEl && typeof bootstrap !== 'undefined') {
+          const inst = bootstrap.Modal.getInstance(deleteModalEl);
+          if (inst) inst.hide();
+        }
+
+        const idToDelete = pendingVoiceDeleteId;
+        pendingVoiceDeleteId = null;
+        await executeAdminVoiceAction('delete', idToDelete);
+      };
+    }
+  }
+
+  function bindAdminVoicesListeners() {
+    // 1. Admin Voices filter buttons
+    document.querySelectorAll('.admin-voices-filter-btn').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.admin-voices-filter-btn').forEach(b => {
+          b.classList.remove('btn-primary');
+          b.classList.add('btn-outline-secondary');
+        });
+        btn.classList.remove('btn-outline-secondary');
+        btn.classList.add('btn-primary');
+
+        adminVoicesFilter = btn.getAttribute('data-filter') || 'all';
+        renderAdminVoicesManager();
+      };
+    });
+
+    // 2. Admin Voices search input
+    const searchInput = document.getElementById('admin-voices-search-input');
+    if (searchInput) {
+      searchInput.oninput = () => {
+        adminVoicesSearch = searchInput.value.trim();
+        renderAdminVoicesManager();
+      };
+    }
+
+    // 3. Admin Voices refresh button
+    const refreshBtn = document.getElementById('admin-refresh-voices-btn');
+    if (refreshBtn) {
+      refreshBtn.onclick = async () => {
+        showToast('Refreshing Campus Voices from server...', 'info');
+        try {
+          const freshData = await fetchAllCampusVoices();
+          if (freshData && Array.isArray(freshData.voices)) {
+            window.__VOICES_GLOBAL = {
+              voices: freshData.voices,
+              featuredVoiceId: freshData.featuredVoiceId || null
+            };
+            renderCampusVoices();
+            renderAllVoicesModal();
+            renderAdminVoicesManager();
+            showToast('Campus Voices refreshed successfully.', 'success');
+            return;
+          }
+        } catch (e) {}
+
+        const adminSecret = await ensureAdminSecret();
+        if (!adminSecret) return;
+
+        const resp = await manageVoiceOnServer({
+          action: 'get_admin',
+          adminSecret
+        });
+
+        if (!handleVoiceActionResponse(resp, 'Failed to fetch admin voices')) {
+          return;
+        }
+
+        if (resp.body && Array.isArray(resp.body.voices)) {
+          window.__VOICES_GLOBAL = {
+            voices: resp.body.voices,
+            featuredVoiceId: resp.body.featuredVoiceId || null
+          };
+        }
+
+        renderCampusVoices();
+        renderAllVoicesModal();
+        renderAdminVoicesManager();
+        showToast('Campus Voices refreshed successfully.', 'success');
+      };
+    }
   }
 
   // Render Photo of the Week Section dynamically (uses global POTW loaded from Supabase storage)
@@ -2890,32 +4633,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // RSVP Event Handler
-  const rsvpForm = document.getElementById('rsvp-form');
-  if (rsvpForm) {
-    rsvpForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const name = document.getElementById('rsvpName')?.value;
-      showToast(`Press Pass Confirmed for ${name}! Ticket code generated.`, 'success');
-
-      const rsvpModalEl = document.getElementById('rsvpModal');
-      if (rsvpModalEl && typeof bootstrap !== 'undefined') {
-        const modal = bootstrap.Modal.getInstance(rsvpModalEl);
-        if (modal) modal.hide();
-      }
-      rsvpForm.reset();
-    });
-  }
-
-  const rsvpBtns = document.querySelectorAll('.rsvp-trigger');
-  rsvpBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const eventName = btn.getAttribute('data-event') || 'Campus Event';
-      const eventNameInput = document.getElementById('rsvpEventName');
-      if (eventNameInput) eventNameInput.value = eventName;
-    });
-  });
-
   // Newsletter Submission
   const newsletterForm = document.getElementById('newsletter-form');
   if (newsletterForm) {
@@ -2932,6 +4649,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   // --------------------------------------------------------------------------
   // SPA Hash Routing & View Management
   // --------------------------------------------------------------------------
+  function updateNavbarActiveLinks(hash, targetPageId) {
+    const allNavLinks = document.querySelectorAll('.navbar-custom .nav-link, #offcanvasNavbar .nav-link');
+    allNavLinks.forEach(link => link.classList.remove('active'));
+
+    if (targetPageId === 'page-admin' || hash === '#admin') {
+      const adminLinks = document.querySelectorAll('#nav-admin-link, #mobile-admin-link');
+      adminLinks.forEach(l => l.classList.add('active'));
+    } else if (targetPageId === 'page-home') {
+      let targetHref = '#hero';
+      if (hash === '#upcoming-events' || hash === '#events') targetHref = '#upcoming-events';
+      else if (hash === '#featured-memories' || hash === '#gallery') targetHref = '#featured-memories';
+      else if (hash === '#photo-of-the-week' || hash === '#spotlight') targetHref = '#photo-of-the-week';
+      else if (hash === '#hero' || hash === '#home' || !hash) targetHref = '#hero';
+
+      allNavLinks.forEach(link => {
+        if (link.getAttribute('href') === targetHref) {
+          link.classList.add('active');
+        }
+      });
+    }
+  }
+
   function handleRouting() {
     const rawHash = window.location.hash || '#home';
     const hash = rawHash.split('?')[0];
@@ -2945,7 +4684,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     else if (hash === '#profile') targetPageId = 'page-profile';
     else if (hash === '#settings') targetPageId = 'page-settings';
     else if (hash === '#admin') targetPageId = 'page-admin';
-    else if (['#hero', '#featured-memories', '#photo-of-the-week', '#upcoming-events', '#testimonials'].includes(hash)) {
+    else if (['#hero', '#featured-memories', '#gallery', '#photo-of-the-week', '#spotlight', '#upcoming-events', '#events', '#testimonials'].includes(hash)) {
       targetPageId = 'page-home';
     }
 
@@ -2958,6 +4697,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (view.id === 'page-home') view.classList.remove('d-none');
           else view.classList.add('d-none');
         });
+        updateNavbarActiveLinks('#home', 'page-home');
         return;
       }
     }
@@ -2969,6 +4709,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         view.classList.add('d-none');
       }
     });
+
+    updateNavbarActiveLinks(hash, targetPageId);
 
     if (targetPageId === 'page-dashboard') {
       renderDashboardView();
@@ -2982,7 +4724,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Scroll handling
     if (targetPageId === 'page-home' && hash !== '#home' && hash !== '#page-home') {
-      const targetEl = document.querySelector(hash);
+      let targetSelector = hash;
+      if (hash === '#events') targetSelector = '#upcoming-events';
+      else if (hash === '#gallery') targetSelector = '#featured-memories';
+      else if (hash === '#spotlight') targetSelector = '#photo-of-the-week';
+      const targetEl = document.querySelector(targetSelector);
       if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth' });
       else window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
@@ -4389,9 +6135,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
       };
     }
+
+    // Render Campus Events in Admin Space
+    renderAdminEventsManager();
+
+    // Render Campus Voices in Admin Space
+    renderAdminVoicesManager();
+
+    // Background refresh Campus Voices from authoritative global storage
+    fetchAllCampusVoices().then(freshData => {
+      if (freshData && Array.isArray(freshData.voices)) {
+        window.__VOICES_GLOBAL = {
+          voices: freshData.voices,
+          featuredVoiceId: freshData.featuredVoiceId || null
+        };
+        renderAdminVoicesManager();
+        renderCampusVoices();
+      }
+    }).catch(() => {});
   }
 
   function bindAdminEventListeners() {
+    // Campus Events Admin Listeners
+    bindAdminEventsListeners();
+
+    // Campus Voices Admin Listeners
+    bindAdminVoicesListeners();
+
     // 1. Set Selected Memory as POTW
     const applyPotwBtn = document.getElementById('admin-apply-selected-potw');
     if (applyPotwBtn) {
@@ -4839,5 +6609,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   bindSubmitMemoriesTriggers();
   bindAdminEventListeners();
   bindProfileMediaEventListeners();
+  bindEventModalActions();
+  bindAllEventsModalListeners();
+  bindCampusVoicesListeners();
   handleRouting();
 });

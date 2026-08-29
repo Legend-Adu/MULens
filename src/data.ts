@@ -79,13 +79,27 @@ export interface EventItem {
   id: string;
   title: string;
   date: string;
+  day: string;
+  month: string;
+  year?: string;
   time: string;
   location: string;
+  venueDetail?: string;
   imageUrl: string;
   category: string;
-  description: string;
+  categoryClass?: string;
   organizer: string;
-  attendeesCount: number;
+  organizerLogo?: string;
+  organizerRole?: string;
+  description: string;
+  highlights?: string[];
+  audience: string;
+  entryFee: string;
+  registrationUrl?: string;
+  registrationDeadline?: string;
+  status: string;
+  contactEmail?: string;
+  contactPhone?: string;
 }
 
 export interface FAQItem {
@@ -149,31 +163,31 @@ export const HERO_SLIDES: HeroSlide[] = [
 export const STATISTICS: StatItem[] = [
   {
     id: 'stat-photos',
-    targetNumber: 48500,
-    suffix: '+',
-    label: 'Campus Photos',
+    targetNumber: 0,
+    suffix: '',
+    label: 'Photos Archived',
     iconClass: 'bi-camera'
   },
   {
-    id: 'stat-videos',
-    targetNumber: 1200,
-    suffix: '+',
-    label: 'Video Stories',
-    iconClass: 'bi-play-btn'
+    id: 'stat-memories',
+    targetNumber: 0,
+    suffix: '',
+    label: 'Memories Archived',
+    iconClass: 'bi-archive'
   },
   {
     id: 'stat-events',
-    targetNumber: 350,
-    suffix: '+',
-    label: 'Events Covered',
-    iconClass: 'bi-calendar2-check'
+    targetNumber: 0,
+    suffix: '',
+    label: 'Upcoming Events',
+    iconClass: 'bi-calendar3'
   },
   {
-    id: 'stat-contributors',
-    targetNumber: 850,
-    suffix: '+',
-    label: 'Contributors',
-    iconClass: 'bi-people'
+    id: 'stat-voices',
+    targetNumber: 0,
+    suffix: '',
+    label: 'Campus Voices',
+    iconClass: 'bi-chat-quote'
   }
 ];
 
@@ -289,40 +303,184 @@ export const FEATURED_PHOTOGRAPHERS: PhotographerItem[] = [
 
 export const UPCOMING_EVENTS: EventItem[] = [
   {
-    id: 'evt-1',
-    title: 'Spring Photojournalism Exhibition 2026',
-    date: 'MAY 18, 2026',
-    time: '4:00 PM - 8:00 PM',
-    location: 'Heritage Art Gallery',
-    imageUrl: 'https://images.unsplash.com/photo-1531058020387-3be344556be6?q=80&w=800&auto=format&fit=crop',
-    category: 'Exhibition',
-    description: 'An curated physical gallery featuring over 150 prints by student photojournalists documenting campus evolution.',
-    organizer: 'MULens Editorial Board',
-    attendeesCount: 240
+    id: 'evt-alpha-concert',
+    title: 'Alpha Beats: Campus Spring Music Concert 2026',
+    date: 'MAY 15, 2026',
+    day: '15',
+    month: 'MAY',
+    year: '2026',
+    time: '5:30 PM - 10:00 PM',
+    location: 'Central Auditorium & Open Lawns',
+    venueDetail: 'Main Stage & Open Amphitheater',
+    imageUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=1200&auto=format&fit=crop',
+    category: 'Music Concert',
+    categoryClass: 'bg-primary-subtle text-primary border-primary-subtle',
+    organizer: 'Alpha Community & Music Club',
+    organizerLogo: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=150&auto=format&fit=crop',
+    organizerRole: 'Campus Music & Culture Guild',
+    description: 'An electrifying evening of live acoustic sets, indie-rock university bands, guest vocalists, and an immersive sound & light experience under the stars.',
+    highlights: [
+      'Performances by 6 top university bands and guest indie headliners',
+      'Free admission with student ID badge verification at gate',
+      'Food truck alley and acoustic jam lounge'
+    ],
+    audience: 'All Students, Faculty & University Guests',
+    entryFee: 'Free Entry (Student ID Required)',
+    registrationUrl: 'https://forms.google.com',
+    registrationDeadline: 'May 14, 2026',
+    status: 'Registration Open',
+    contactEmail: 'events@alphacommunity.edu',
+    contactPhone: '+880 1700-123456'
   },
   {
-    id: 'evt-2',
-    title: 'Annual Varsity Championship Finals',
-    date: 'MAY 24, 2026',
-    time: '2:00 PM - 6:00 PM',
-    location: 'University Main Stadium',
-    imageUrl: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=800&auto=format&fit=crop',
-    category: 'Sports',
-    description: 'The ultimate rivalry match of the season with live media coverage, sideline press accreditation, and drone photography.',
-    organizer: 'Varsity Athletics Association',
-    attendeesCount: 1850
+    id: 'evt-ncpc-hackathon',
+    title: 'National Collegiate Programming Contest (NCPC) & Hackathon',
+    date: 'MAY 22, 2026',
+    day: '22',
+    month: 'MAY',
+    year: '2026',
+    time: '9:00 AM - 6:00 PM',
+    location: 'CSE Department Innovation Labs',
+    venueDetail: 'Lab 301, 302 & Computing Center',
+    imageUrl: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=1200&auto=format&fit=crop',
+    category: 'Tech & Coding',
+    categoryClass: 'bg-info-subtle text-info border-info-subtle',
+    organizer: 'CSE Society & ACM Student Chapter',
+    organizerLogo: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=150&auto=format&fit=crop',
+    organizerRole: 'Department Technical Society',
+    description: 'The premier university coding battle where 60+ algorithmic teams compete in dynamic problem solving, data structures, and algorithmic logic under ICPC-standard contest rules.',
+    highlights: [
+      '5-hour ICPC format algorithmic problem solving contest',
+      'Cash prizes, medals, and national certificate of merit',
+      'Industry tech talks & networking lunch with software recruiters'
+    ],
+    audience: 'Enrolled CSE / EEE / STEM Undergraduates',
+    entryFee: 'Free for Department Teams',
+    registrationUrl: 'https://csesociety.edu/ncpc2026',
+    registrationDeadline: 'May 19, 2026',
+    status: 'Registration Open',
+    contactEmail: 'contest@csesociety.edu',
+    contactPhone: '+880 1800-987654'
   },
   {
-    id: 'evt-3',
-    title: 'Monsoon Sunset Photography Walk',
-    date: 'JUN 05, 2026',
-    time: '5:30 PM - 7:30 PM',
-    location: 'North Quad Fountain',
-    imageUrl: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=800&auto=format&fit=crop',
-    category: 'Workshop',
-    description: 'Join senior fellows for an interactive golden hour photowalk focusing on rain reflections, long exposure, and framing.',
-    organizer: 'Photography Society',
-    attendeesCount: 85
+    id: 'evt-inter-dept-sports',
+    title: 'Inter-Department Football & Athletics Tournament Finals',
+    date: 'MAY 28, 2026',
+    day: '28',
+    month: 'MAY',
+    year: '2026',
+    time: '2:30 PM - 7:00 PM',
+    location: 'University Sports Stadium',
+    venueDetail: 'Main Football Arena & Running Track',
+    imageUrl: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?q=80&w=1200&auto=format&fit=crop',
+    category: 'Sports & Athletics',
+    categoryClass: 'bg-success-subtle text-success border-success-subtle',
+    organizer: 'University Sports Board & Athletics Club',
+    organizerLogo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=150&auto=format&fit=crop',
+    organizerRole: 'University Athletics Board',
+    description: 'The adrenaline-fueled climax of the semester sports tournament as finalists clash for the Grand Chancellor Trophy, accompanied by marching band fanfares.',
+    highlights: [
+      'Final championship match: CSE Titans vs. BBA Mavericks',
+      '4x100m relay sprint sprint-offs and medal ceremonies',
+      'Live stadium commentary and cheerleader cheer-offs'
+    ],
+    audience: 'Open for All Campus Supporters & Alumni',
+    entryFee: 'Free Entry (Open Seating)',
+    registrationUrl: 'https://sports.university.edu/finals',
+    registrationDeadline: 'Walk-in Welcome',
+    status: 'Upcoming',
+    contactEmail: 'sports@university.edu',
+    contactPhone: '+880 1900-554433'
+  },
+  {
+    id: 'evt-cultural-fest',
+    title: 'Annual Campus Cultural Gala & Theater Showcase',
+    date: 'JUN 04, 2026',
+    day: '04',
+    month: 'JUN',
+    year: '2026',
+    time: '4:00 PM - 9:30 PM',
+    location: 'Main Auditorium & Quadrangle',
+    venueDetail: 'Grand Auditorium Stage 1',
+    imageUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1200&auto=format&fit=crop',
+    category: 'Cultural & Arts',
+    categoryClass: 'bg-warning-subtle text-warning border-warning-subtle',
+    organizer: 'Cultural Club & English Drama Society',
+    organizerLogo: 'https://images.unsplash.com/photo-1469488865564-c2de10f69f96?q=80&w=150&auto=format&fit=crop',
+    organizerRole: 'Student Performing Arts Council',
+    description: 'A vibrant celebration of traditional and contemporary performing arts, featuring student-directed theatrical plays, folk musical ensembles, and poetry slams.',
+    highlights: [
+      'Original 2-act play: "Echoes of the Quad" written by English Dept students',
+      'Classical & contemporary fusion dance recitals',
+      'Traditional attire photo booth and campus food fair'
+    ],
+    audience: 'All University Students, Faculty & Families',
+    entryFee: 'Free Admission',
+    registrationUrl: 'https://culturalclub.edu/gala2026',
+    registrationDeadline: 'June 02, 2026',
+    status: 'Registration Open',
+    contactEmail: 'cultural@university.edu',
+    contactPhone: '+880 1711-223344'
+  },
+  {
+    id: 'evt-ai-robotics-workshop',
+    title: 'AI, Generative Models & Robotics Hands-on Seminar',
+    date: 'JUN 11, 2026',
+    day: '11',
+    month: 'JUN',
+    year: '2026',
+    time: '10:00 AM - 3:30 PM',
+    location: 'EEE & Robotics Engineering Hub',
+    venueDetail: 'Seminar Hall B & Embedded Systems Lab',
+    imageUrl: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?q=80&w=1200&auto=format&fit=crop',
+    category: 'Workshop & Seminar',
+    categoryClass: 'bg-primary-subtle text-primary border-primary-subtle',
+    organizer: 'Robotics Society & IEEE Student Branch',
+    organizerLogo: 'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?q=80&w=150&auto=format&fit=crop',
+    organizerRole: 'Engineering Technical Chapter',
+    description: 'An interactive masterclass and hardware hack workshop exploring computer vision, autonomous navigation with microcontrollers, and modern LLM edge integrations.',
+    highlights: [
+      'Hands-on microcontroller programming and computer vision tracking',
+      'Guest keynote by leading robotics research scientist',
+      'Certificate of participation and kit provided for attendees'
+    ],
+    audience: 'Students interested in AI, Hardware & Coding',
+    entryFee: 'Free (Seat Cap: 80 Participants)',
+    registrationUrl: 'https://robotics.university.edu/workshop',
+    registrationDeadline: 'June 08, 2026',
+    status: 'Limited Seats Left',
+    contactEmail: 'robotics@university.edu',
+    contactPhone: '+880 1733-445566'
+  },
+  {
+    id: 'evt-club-carnival',
+    title: 'University Club Carnival & Autumn Recruitment Drive',
+    date: 'JUN 18, 2026',
+    day: '18',
+    month: 'JUN',
+    year: '2026',
+    time: '10:00 AM - 5:00 PM',
+    location: 'Heritage Quad & Walkway Pavilions',
+    venueDetail: 'All Quadrangle Gazebos & Lawn Stalls',
+    imageUrl: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?q=80&w=1200&auto=format&fit=crop',
+    category: 'Recruitment & Carnival',
+    categoryClass: 'bg-info-subtle text-info border-info-subtle',
+    organizer: 'Office of Student Affairs & Clubs Council',
+    organizerLogo: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=150&auto=format&fit=crop',
+    organizerRole: 'Central Student Governance',
+    description: 'Explore over 25 registered campus clubs — spanning photography, debating, computing, music, social service, robotics, and sports — all in one lively festival.',
+    highlights: [
+      'On-the-spot registration booths for 25+ official clubs and societies',
+      'Interactive games, quizzes, and club merchandise giveaways',
+      'Live music and orientation briefings for new students'
+    ],
+    audience: 'Open for All Enrolled Students & Freshers',
+    entryFee: 'Free Entry & Open Walk-In',
+    registrationUrl: 'https://clubs.university.edu/carnival',
+    registrationDeadline: 'Walk-in Welcome',
+    status: 'Upcoming',
+    contactEmail: 'studentaffairs@university.edu',
+    contactPhone: '+880 1755-667788'
   }
 ];
 

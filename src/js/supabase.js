@@ -109,6 +109,213 @@ export async function setPOTWOnServer({ memId = null, custom = null, adminSecret
 }
 
 /**
+ * Fetch global Campus Events list from Supabase Storage JSON file or server API
+ */
+export async function fetchEventsFromSupabase() {
+  try {
+    // 1. Try public storage URL first (fastest, CDN cached)
+    if (supabase && supabase.storage) {
+      try {
+        const { data: urlData, error: urlErr } = await supabase.storage.from(BUCKET_NAME).getPublicUrl('site-config/events.json');
+        if (!urlErr && urlData && urlData.publicUrl) {
+          const resp = await fetch(urlData.publicUrl + '?t=' + Date.now());
+          if (resp.ok) {
+            const text = await resp.text();
+            if (text) {
+              const events = JSON.parse(text);
+              if (Array.isArray(events)) {
+                return events;
+              }
+            }
+          }
+        }
+      } catch (storageErr) {
+        // Storage file not found or inaccessible, fallback to API
+      }
+    }
+
+    // 2. Fallback to API
+    try {
+      const apiRes = await fetch('/api/manage-events', { method: 'GET' });
+      if (apiRes.ok) {
+        const data = await apiRes.json();
+        if (data && Array.isArray(data.events)) {
+          return data.events;
+        }
+      }
+    } catch (apiErr) {
+      // API fallback failed
+    }
+
+    return [];
+  } catch (err) {
+    console.warn('[Supabase Events Fetch Error]:', err);
+    return [];
+  }
+}
+
+/**
+ * Manage Campus Events via serverless API (create, update, delete, reset). Requires x-admin-secret header.
+ */
+export async function manageEventOnServer({ action = 'get', event = null, eventId = null, events = null, adminSecret = '' } = {}) {
+  try {
+    const res = await fetch('/api/manage-events', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-secret': adminSecret
+      },
+      body: JSON.stringify({ action, event, eventId, events })
+    });
+    const text = await res.text();
+    let json = {};
+    try { json = text ? JSON.parse(text) : {}; } catch (e) { json = { message: text }; }
+    return { ok: res.ok, status: res.status, body: json };
+  } catch (err) {
+    console.error('[Manage Event Exception]:', err);
+    return { ok: false, status: 0, networkError: true, body: { error: err.message || 'Unable to connect to Campus Events server.' } };
+  }
+}
+
+/**
+ * Fetch Campus Voices (public approved voices only).
+ */
+export async function fetchCampusVoices() {
+  try {
+    // 1. Try public storage JSON directly (fastest, CDN cached)
+    const directUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET_NAME}/site-config/campus-voices.json?t=${Date.now()}`;
+    try {
+      const res = await fetch(directUrl);
+      if (res.ok) {
+        const config = await res.json();
+        if (config && Array.isArray(config.voices)) {
+          const approved = config.voices.filter(v => v.status === 'approved');
+          return {
+            voices: approved,
+            featuredVoiceId: config.featuredVoiceId || null
+          };
+        }
+      }
+    } catch (e) {
+      // Fallback to API route
+    }
+
+    // 2. Try serverless API endpoint
+    try {
+      const apiRes = await fetch('/api/manage-voices?public=true');
+      if (apiRes.ok) {
+        const data = await apiRes.json();
+        if (data && Array.isArray(data.voices)) {
+          return {
+            voices: data.voices,
+            featuredVoiceId: data.featuredVoiceId || null
+          };
+        }
+      }
+    } catch (apiErr) {
+      // API fallback failed
+    }
+
+    return { voices: [], featuredVoiceId: null };
+  } catch (err) {
+    console.warn('[Campus Voices Fetch Error]:', err);
+    return { voices: [], featuredVoiceId: null };
+  }
+}
+
+/**
+ * Fetch ALL Campus Voices from global storage (for Admin Space: includes pending, approved, and rejected).
+ */
+export async function fetchAllCampusVoices() {
+  try {
+    // 1. Try public storage JSON directly (authoritative source of truth)
+    const directUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET_NAME}/site-config/campus-voices.json?t=${Date.now()}`;
+    try {
+      const res = await fetch(directUrl);
+      if (res.ok) {
+        const config = await res.json();
+        if (config && Array.isArray(config.voices)) {
+          return {
+            voices: config.voices,
+            featuredVoiceId: config.featuredVoiceId || null,
+            updatedAt: config.updatedAt || null
+          };
+        }
+      }
+    } catch (e) {
+      // Fallback to API route
+    }
+
+    // 2. Try serverless API endpoint
+    try {
+      const apiRes = await fetch('/api/manage-voices');
+      if (apiRes.ok) {
+        const data = await apiRes.json();
+        if (data && Array.isArray(data.voices)) {
+          return {
+            voices: data.voices,
+            featuredVoiceId: data.featuredVoiceId || null,
+            updatedAt: data.updatedAt || null
+          };
+        }
+      }
+    } catch (apiErr) {
+      // API fallback failed
+    }
+
+    return { voices: [], featuredVoiceId: null };
+  } catch (err) {
+    console.warn('[Campus Voices Fetch All Error]:', err);
+    return { voices: [], featuredVoiceId: null };
+  }
+}
+
+/**
+ * Submit a new Campus Voice for review (Public Endpoint, forces status: pending).
+ */
+export async function submitCampusVoice(payload) {
+  try {
+    const res = await fetch('/api/submit-voice', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    const text = await res.text();
+    let json = {};
+    try { json = text ? JSON.parse(text) : {}; } catch (e) { json = { message: text }; }
+    return { ok: res.ok, status: res.status, body: json };
+  } catch (err) {
+    console.error('[Submit Campus Voice Exception]:', err);
+    return { ok: false, status: 0, networkError: true, body: { error: err.message || 'Unable to connect to Campus Voices server.' } };
+  }
+}
+
+/**
+ * Manage Campus Voices via serverless API (approve, reject, delete, feature, unfeature, get_admin). Requires x-admin-secret header.
+ */
+export async function manageVoiceOnServer({ action = 'get_admin', voiceId = null, adminSecret = '' } = {}) {
+  try {
+    const res = await fetch('/api/manage-voices', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-secret': adminSecret
+      },
+      body: JSON.stringify({ action, voiceId })
+    });
+    const text = await res.text();
+    let json = {};
+    try { json = text ? JSON.parse(text) : {}; } catch (e) { json = { message: text }; }
+    return { ok: res.ok, status: res.status, body: json };
+  } catch (err) {
+    console.error('[Manage Voice Exception]:', err);
+    return { ok: false, status: 0, networkError: true, body: { error: err.message || 'Unable to connect to Campus Voices server.' } };
+  }
+}
+
+/**
  * Helper to map DB row object to MULens Memory Object
  */
 export function mapRowToMemory(row) {

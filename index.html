@@ -190,38 +190,38 @@
               <div class="stat-icon-box">
                 <i class="bi bi-camera"></i>
               </div>
-              <div class="stat-number" id="stat-count-photos" data-suffix="+">0</div>
-              <div class="stat-label">Campus Photos</div>
+              <div class="stat-number" id="stat-count-photos" data-suffix="">0</div>
+              <div class="stat-label">Photos Archived</div>
             </div>
           </div>
 
           <div class="col-6 col-md-3" data-aos="fade-up" data-aos-delay="200">
             <div class="glass-panel stat-card glass-panel-hover">
               <div class="stat-icon-box">
-                <i class="bi bi-play-btn"></i>
+                <i class="bi bi-archive"></i>
               </div>
-              <div class="stat-number" id="stat-count-videos" data-suffix="+">0</div>
-              <div class="stat-label">Video Stories</div>
+              <div class="stat-number" id="stat-count-memories" data-suffix="">0</div>
+              <div class="stat-label">Memories Archived</div>
             </div>
           </div>
 
           <div class="col-6 col-md-3" data-aos="fade-up" data-aos-delay="300">
             <div class="glass-panel stat-card glass-panel-hover">
               <div class="stat-icon-box">
-                <i class="bi bi-calendar2-check"></i>
+                <i class="bi bi-calendar3"></i>
               </div>
-              <div class="stat-number" id="stat-count-events" data-suffix="+">0</div>
-              <div class="stat-label">Events Covered</div>
+              <div class="stat-number" id="stat-count-events" data-suffix="">0</div>
+              <div class="stat-label">Upcoming Events</div>
             </div>
           </div>
 
           <div class="col-6 col-md-3" data-aos="fade-up" data-aos-delay="400">
             <div class="glass-panel stat-card glass-panel-hover">
               <div class="stat-icon-box">
-                <i class="bi bi-people"></i>
+                <i class="bi bi-chat-quote"></i>
               </div>
-              <div class="stat-number" id="stat-count-contributors" data-suffix="+">0</div>
-              <div class="stat-label">Contributors</div>
+              <div class="stat-number" id="stat-count-voices" data-suffix="">0</div>
+              <div class="stat-label">Campus Voices</div>
             </div>
           </div>
         </div>
@@ -335,195 +335,67 @@
     <div class="container max-w-7xl">
       <div class="section-header" data-aos="fade-up">
         <div class="section-subtitle-pill">
-          <i class="bi bi-calendar-event-fill"></i> Campus Schedule
+          <i class="bi bi-calendar-event-fill"></i> Campus Life & Activities
         </div>
         <h2 class="section-title">Upcoming Campus Events</h2>
         <p class="section-description">
-          Join upcoming media workshops, photo exhibitions, and press coverage assignments across campus.
+          Discover the nearest upcoming live music concerts, coding hackathons, cultural fests, sports championships, and workshops across campus.
         </p>
       </div>
 
-      <div class="row g-4">
-        <!-- Event 1 -->
-        <div class="col-md-6" data-aos="fade-up" data-aos-delay="100">
-          <div class="glass-panel event-timeline-card glass-panel-hover">
-            <div class="d-flex align-items-start gap-3">
-              <div class="event-date-box">
-                <div class="event-date-day">15</div>
-                <div class="event-date-month">MAY</div>
-              </div>
-              <div class="flex-grow-1">
-                <div class="badge bg-primary-subtle text-primary mb-2">University events</div>
-                <h3 class="fs-5 fw-bold mb-1">Annual Cultural Fest '26 Coverage</h3>
-                <p class="text-muted small mb-3"><i class="bi bi-geo-alt"></i> Main Auditorium & Central Lawns</p>
-                <div class="d-flex align-items-center justify-content-between">
-                  <span class="text-muted extra-small"><i class="bi bi-people-fill text-success"></i> 420 Photographers Registered</span>
-                  <button class="btn btn-gradient btn-sm rsvp-trigger" data-event="Annual Cultural Fest '26" data-bs-toggle="modal" data-bs-target="#rsvpModal">
-                    Get Media Pass
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <!-- Dynamic Events Grid Container (Nearest 4 Upcoming Events) -->
+      <div class="row g-4" id="upcoming-events-container" data-aos="fade-up" data-aos-delay="100">
+        <!-- Rendered dynamically by JavaScript -->
+      </div>
 
-        <!-- Event 2 -->
-        <div class="col-md-6" data-aos="fade-up" data-aos-delay="200">
-          <div class="glass-panel event-timeline-card glass-panel-hover" style="border-left-color: #06B6D4;">
-            <div class="d-flex align-items-start gap-3">
-              <div class="event-date-box" style="background: linear-gradient(135deg, #06B6D4, #2563EB);">
-                <div class="event-date-day">22</div>
-                <div class="event-date-month">MAY</div>
-              </div>
-              <div class="flex-grow-1">
-                <div class="badge bg-info-subtle text-info mb-2">Sports</div>
-                <h3 class="fs-5 fw-bold mb-1">Inter-University Athletics Finals</h3>
-                <p class="text-muted small mb-3"><i class="bi bi-geo-alt"></i> University Sports Stadium</p>
-                <div class="d-flex align-items-center justify-content-between">
-                  <span class="text-muted extra-small"><i class="bi bi-people-fill text-success"></i> 280 Photographers Registered</span>
-                  <button class="btn btn-gradient btn-sm rsvp-trigger" data-event="Inter-University Athletics Finals" data-bs-toggle="modal" data-bs-target="#rsvpModal">
-                    Get Media Pass
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <!-- Empty State for Events -->
+      <div id="events-empty-state" class="d-none text-center py-5">
+        <i class="bi bi-calendar-x fs-1 text-muted opacity-50 mb-3 d-block"></i>
+        <h5 class="fw-bold text-muted">No Upcoming Events Found</h5>
+        <p class="small text-muted mb-0">No upcoming events are currently scheduled. Check back soon!</p>
+      </div>
 
-        <!-- Event 3 -->
-        <div class="col-md-6" data-aos="fade-up" data-aos-delay="300">
-          <div class="glass-panel event-timeline-card glass-panel-hover" style="border-left-color: #F59E0B;">
-            <div class="d-flex align-items-start gap-3">
-              <div class="event-date-box" style="background: var(--gradient-gold);">
-                <div class="event-date-day">01</div>
-                <div class="event-date-month">JUN</div>
-              </div>
-              <div class="flex-grow-1">
-                <div class="badge bg-warning-subtle text-warning mb-2">Workshop</div>
-                <h3 class="fs-5 fw-bold mb-1">Night & Astrophotography Masterclass</h3>
-                <p class="text-muted small mb-3"><i class="bi bi-geo-alt"></i> Media Arts Lab & Observatory</p>
-                <div class="d-flex align-items-center justify-content-between">
-                  <span class="text-muted extra-small"><i class="bi bi-people-fill text-success"></i> 95 Seats Left</span>
-                  <button class="btn btn-gradient btn-sm rsvp-trigger" data-event="Night & Astrophotography Masterclass" data-bs-toggle="modal" data-bs-target="#rsvpModal">
-                    RSVP Workshop
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Event 4 -->
-        <div class="col-md-6" data-aos="fade-up" data-aos-delay="400">
-          <div class="glass-panel event-timeline-card glass-panel-hover">
-            <div class="d-flex align-items-start gap-3">
-              <div class="event-date-box">
-                <div class="event-date-day">10</div>
-                <div class="event-date-month">JUN</div>
-              </div>
-              <div class="flex-grow-1">
-                <div class="badge bg-primary-subtle text-primary mb-2">Alumni</div>
-                <h3 class="fs-5 fw-bold mb-1">Alumni Homecoming & Photo Gala</h3>
-                <p class="text-muted small mb-3"><i class="bi bi-geo-alt"></i> Heritage Quadrangle Hall</p>
-                <div class="d-flex align-items-center justify-content-between">
-                  <span class="text-muted extra-small"><i class="bi bi-people-fill text-success"></i> 310 Confirmed Attendees</span>
-                  <button class="btn btn-gradient btn-sm rsvp-trigger" data-event="Alumni Homecoming & Photo Gala" data-bs-toggle="modal" data-bs-target="#rsvpModal">
-                    Get Media Pass
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <!-- View All Events Action Footer -->
+      <div class="text-center mt-5" id="view-all-events-wrap" data-aos="fade-up">
+        <button type="button" class="btn btn-outline-primary btn-lg rounded-pill px-4 py-2.5 fw-bold shadow-sm" id="btn-view-all-events" data-bs-toggle="modal" data-bs-target="#allEventsModal">
+          <i class="bi bi-calendar-week me-2"></i> View All Upcoming Events & Schedule <i class="bi bi-arrow-right ms-1"></i>
+        </button>
       </div>
     </div>
   </section>
 
-  <!-- Testimonials Section -->
-  <section id="testimonials" class="section-padding">
+  <!-- Campus Voices Section -->
+  <section id="campus-voices" class="section-padding">
     <div class="container max-w-7xl">
-      <div class="section-header" data-aos="fade-up">
+      <div class="section-header text-center mb-5" data-aos="fade-up">
         <div class="section-subtitle-pill">
-          <i class="bi bi-chat-quote-fill"></i> Community Voices
+          <i class="bi bi-chat-quote-fill text-primary"></i> Community Voices
         </div>
-        <h2 class="section-title">What Our Campus Says</h2>
+        <h2 class="section-title">Campus Voices</h2>
         <p class="section-description">
-          Hear how CampusLens empowers student creators, campus journalists, and alumni storytellers.
+          Authentic thoughts, memories, appreciation, and stories from the Metropolitan University community.
         </p>
       </div>
 
-      <div class="row g-4">
-        <!-- Testimonial 1 -->
-        <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
-          <div class="glass-panel testimonial-card glass-panel-hover">
-            <div class="quote-icon"><i class="bi bi-quote"></i></div>
-            <div class="rating-stars mb-3">
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-            </div>
-            <p class="text-muted mb-4 flex-grow-1">
-              "CampusLens gave my photojournalism portfolio national visibility. The high-res media archive allowed me to land a photo editor role right after graduation!"
-            </p>
-            <div class="d-flex align-items-center gap-3 pt-3 border-top">
-              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop" alt="Elena" class="author-avatar">
-              <div>
-                <div class="fw-bold small">Elena Rostova '26</div>
-                <div class="text-muted extra-small">Senior Photo Fellow</div>
-              </div>
-            </div>
+      <!-- Dynamic Campus Voices Layout -->
+      <div id="campus-voices-container" class="mb-4">
+        <!-- Rendered dynamically by renderCampusVoices() -->
+        <div class="text-center py-5">
+          <div class="spinner-border text-primary spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading Campus Voices...</span>
           </div>
+          <p class="text-muted extra-small mt-2 mb-0">Loading community voices...</p>
         </div>
+      </div>
 
-        <!-- Testimonial 2 -->
-        <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
-          <div class="glass-panel testimonial-card glass-panel-hover">
-            <div class="quote-icon"><i class="bi bi-quote"></i></div>
-            <div class="rating-stars mb-3">
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-            </div>
-            <p class="text-muted mb-4 flex-grow-1">
-              "As an event organizer, finding quality high-resolution event media used to be chaotic. CampusLens made instant press releases effortless."
-            </p>
-            <div class="d-flex align-items-center gap-3 pt-3 border-top">
-              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop" alt="Marcus" class="author-avatar">
-              <div>
-                <div class="fw-bold small">Marcus Vance '25</div>
-                <div class="text-muted extra-small">Sports Press Lead</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Testimonial 3 -->
-        <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
-          <div class="glass-panel testimonial-card glass-panel-hover">
-            <div class="quote-icon"><i class="bi bi-quote"></i></div>
-            <div class="rating-stars mb-3">
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-            </div>
-            <p class="text-muted mb-4 flex-grow-1">
-              "Whenever I get nostalgic about my university days, CampusLens brings back every memory in stunning clarity. Truly a priceless digital archive."
-            </p>
-            <div class="d-flex align-items-center gap-3 pt-3 border-top">
-              <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop" alt="Sarah" class="author-avatar">
-              <div>
-                <div class="fw-bold small">Sarah Chen '27</div>
-                <div class="text-muted extra-small">Cultural Reporter</div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <!-- Action Row -->
+      <div class="d-flex flex-wrap align-items-center justify-content-center gap-3 pt-3" data-aos="fade-up">
+        <button type="button" class="btn btn-primary rounded-pill px-4 py-2.5 fw-bold shadow-sm d-inline-flex align-items-center gap-2" id="share-voice-btn" data-bs-toggle="modal" data-bs-target="#shareVoiceModal">
+          <i class="bi bi-pencil-square"></i> Share Your Voice
+        </button>
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-4 py-2.5 fw-medium d-none align-items-center gap-2" id="view-all-voices-btn" data-bs-toggle="modal" data-bs-target="#allVoicesModal">
+          <i class="bi bi-collection"></i> View All Campus Voices <span id="voices-total-badge" class="badge bg-secondary-subtle text-secondary ms-1">0</span>
+        </button>
       </div>
     </div>
   </section>
@@ -531,63 +403,141 @@
   <!-- Premium Footer -->
   <footer>
     <div class="container max-w-7xl">
+      <!-- MULens at a Glance: Live Statistics Strip -->
+      <div class="footer-glance-strip" data-aos="fade-up">
+        <div class="row align-items-center g-4">
+          <div class="col-lg-3 col-md-6 col-12">
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-primary-subtle text-primary fw-bold text-uppercase px-2.5 py-1 extra-small">Live Archive</span>
+              <span class="footer-glance-title">MULens at a Glance</span>
+            </div>
+          </div>
+          <div class="col-lg-9 col-md-12 col-12">
+            <div class="row g-3">
+              <div class="col-6 col-md-3">
+                <div class="footer-stat-item">
+                  <div class="footer-stat-icon text-cyan">
+                    <i class="bi bi-images"></i>
+                  </div>
+                  <div>
+                    <div class="footer-stat-value" id="footer-stat-memories" data-suffix="+">0</div>
+                    <div class="footer-stat-label">Memories</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="footer-stat-item">
+                  <div class="footer-stat-icon text-emerald">
+                    <i class="bi bi-calendar-event"></i>
+                  </div>
+                  <div>
+                    <div class="footer-stat-value" id="footer-stat-events" data-suffix="">0</div>
+                    <div class="footer-stat-label">Campus Events</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="footer-stat-item">
+                  <div class="footer-stat-icon text-pink">
+                    <i class="bi bi-chat-heart"></i>
+                  </div>
+                  <div>
+                    <div class="footer-stat-value" id="footer-stat-voices" data-suffix="">0</div>
+                    <div class="footer-stat-label">Campus Voices</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="footer-stat-item">
+                  <div class="footer-stat-icon text-amber">
+                    <i class="bi bi-people"></i>
+                  </div>
+                  <div>
+                    <div class="footer-stat-value" id="footer-stat-contributors" data-suffix="">0</div>
+                    <div class="footer-stat-label">Contributors</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Footer Columns -->
       <div class="row g-4 mb-5">
-        <div class="col-lg-4">
-          <a class="navbar-brand text-white mb-3 d-inline-flex" href="#hero">
+        <!-- Column 1: MULens Branding -->
+        <div class="col-lg-4 col-md-6 col-12">
+          <a class="navbar-brand text-white mb-3 d-inline-flex align-items-center" href="#hero" aria-label="MULens Home">
             <div class="brand-icon-wrapper me-2">
               <i class="bi bi-camera2"></i>
             </div>
             <span><span class="brand-m">M</span><span class="brand-u">U</span><span class="brand-lens">Lens</span></span>
           </a>
-          <p class="text-muted small pe-lg-4 mb-4">
-            The official student media archive and photography platform preserving memories, sports triumphs, and campus traditions for generations.
+          <p class="footer-desc pe-lg-4 mb-4">
+            The digital media archive of Metropolitan University — preserving campus memories, events, and stories for the community.
           </p>
           <div class="d-flex align-items-center gap-2">
-            <a href="#" class="social-icon-btn" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
-            <a href="#" class="social-icon-btn" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
-            <a href="#" class="social-icon-btn" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
-            <a href="#" class="social-icon-btn" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
+            <a href="https://metrouni.edu.bd/" target="_blank" rel="noopener noreferrer" class="social-icon-btn" aria-label="Official Website" title="Metropolitan University Official Website"><i class="bi bi-globe"></i></a>
+            <a href="https://www.facebook.com/metropolitanuniversity/" target="_blank" rel="noopener noreferrer" class="social-icon-btn" aria-label="Facebook" title="Metropolitan University Facebook"><i class="bi bi-facebook"></i></a>
+            <a href="https://www.linkedin.com/school/metropolitan-university-sylhet/" target="_blank" rel="noopener noreferrer" class="social-icon-btn" aria-label="LinkedIn" title="Metropolitan University LinkedIn"><i class="bi bi-linkedin"></i></a>
+            <a href="https://www.youtube.com/@metropolitanuniversity" target="_blank" rel="noopener noreferrer" class="social-icon-btn" aria-label="YouTube" title="Metropolitan University YouTube Channel"><i class="bi bi-youtube"></i></a>
           </div>
         </div>
 
-        <div class="col-6 col-lg-2">
-          <h5>Quick Links</h5>
-          <ul class="list-unstyled">
-            <li><a href="#hero" class="footer-link">Home</a></li>
-            <li><a href="#featured-memories" class="footer-link">Gallery Archive</a></li>
-            <li><a href="#photo-of-the-week" class="footer-link">Spotlight Photo</a></li>
-            <li><a href="#upcoming-events" class="footer-link">Events Calendar</a></li>
-            <li><a href="#testimonials" class="footer-link">Student Stories</a></li>
+        <!-- Column 2: EXPLORE -->
+        <div class="col-6 col-md-3 col-lg-2">
+          <h5><i class="bi bi-compass me-2 text-info fs-6"></i>Explore</h5>
+          <ul class="list-unstyled footer-nav-list">
+            <li><a href="#hero" class="footer-link"><i class="bi bi-chevron-right extra-small me-1.5 opacity-75"></i>Home</a></li>
+            <li><a href="#featured-memories" class="footer-link"><i class="bi bi-chevron-right extra-small me-1.5 opacity-75"></i>Gallery Archive</a></li>
+            <li><a href="#photo-of-the-week" class="footer-link"><i class="bi bi-chevron-right extra-small me-1.5 opacity-75"></i>Photo of the Week</a></li>
+            <li><a href="#upcoming-events" class="footer-link"><i class="bi bi-chevron-right extra-small me-1.5 opacity-75"></i>Upcoming Events</a></li>
           </ul>
         </div>
 
-        <div class="col-6 col-lg-3">
-          <h5>Collections</h5>
-          <ul class="list-unstyled">
-            <li><a href="#featured-memories" class="footer-link">Graduation Ceremonies</a></li>
-            <li><a href="#featured-memories" class="footer-link">Varsity Sports & Athletics</a></li>
-            <li><a href="#featured-memories" class="footer-link">Cultural & Music Fests</a></li>
-            <li><a href="#featured-memories" class="footer-link">Monsoon & Nature Photography</a></li>
-            <li><a href="#featured-memories" class="footer-link">Campus Heritage Architecture</a></li>
+        <!-- Column 3: COMMUNITY -->
+        <div class="col-6 col-md-3 col-lg-3">
+          <h5><i class="bi bi-people me-2 text-primary fs-6"></i>Community</h5>
+          <ul class="list-unstyled footer-nav-list">
+            <li><button type="button" class="footer-link submit-memories-btn-trigger"><i class="bi bi-chevron-right extra-small me-1.5 opacity-75"></i>Submit a Memory</button></li>
+            <li><button type="button" class="footer-link" data-bs-toggle="modal" data-bs-target="#shareVoiceModal"><i class="bi bi-chevron-right extra-small me-1.5 opacity-75"></i>Share Your Voice</button></li>
+            <li><a href="#campus-voices" class="footer-link"><i class="bi bi-chevron-right extra-small me-1.5 opacity-75"></i>Campus Voices</a></li>
+            <li><button type="button" class="footer-link profile-trigger" data-tab="albums"><i class="bi bi-chevron-right extra-small me-1.5 opacity-75"></i>My Profile & Albums</button></li>
           </ul>
         </div>
 
-        <div class="col-lg-3">
-          <h5>Media Desk</h5>
-          <p class="text-muted small mb-2"><i class="bi bi-geo-alt-fill text-primary me-2"></i> Media Arts Center, Building B, Quadrangle Campus</p>
-          <p class="text-muted small mb-2"><i class="bi bi-envelope-fill text-primary me-2"></i> press@mulens.edu</p>
-          <p class="text-muted small mb-0"><i class="bi bi-telephone-fill text-primary me-2"></i> +1 (555) 234-5678</p>
+        <!-- Column 4: UNIVERSITY / INFO -->
+        <div class="col-lg-3 col-md-6 col-12">
+          <h5><i class="bi bi-mortarboard me-2 text-warning fs-6"></i>University</h5>
+          <ul class="list-unstyled footer-nav-list">
+            <li>
+              <button type="button" class="footer-link" data-bs-toggle="modal" data-bs-target="#aboutMULensModal">
+                <i class="bi bi-info-circle me-2 text-info opacity-75"></i>About MULens
+              </button>
+            </li>
+            <li>
+              <a href="https://metrouni.edu.bd/" target="_blank" rel="noopener noreferrer" class="footer-link">
+                <i class="bi bi-box-arrow-up-right me-2 text-info opacity-75"></i>Metropolitan University
+              </a>
+            </li>
+            <li class="mt-2.5">
+              <div class="footer-info-item small d-flex align-items-start gap-2">
+                <i class="bi bi-geo-alt-fill text-danger mt-1"></i>
+                <div>
+                  <span class="d-block text-white fw-semibold">Permanent Campus</span>
+                  <span class="text-slate-400 extra-small">Bateshwar, Sylhet-3103, Bangladesh</span>
+                </div>
+              </div>
+            </li>
+          </ul>
         </div>
       </div>
 
-      <div class="pt-4 border-top border-secondary-subtle d-flex flex-column flex-md-row align-items-center justify-content-between text-muted small">
-        <p class="mb-2 mb-md-0">&copy; 2026 MULens. All rights reserved. Crafted for Student Photojournalists.</p>
-        <div class="d-flex align-items-center gap-3">
-          <a href="#" class="text-muted text-decoration-none">Privacy Policy</a>
-          <span>•</span>
-          <a href="#" class="text-muted text-decoration-none">Terms of Service</a>
-          <span>•</span>
-          <a href="#" class="text-muted text-decoration-none">Press Guidelines</a>
+      <!-- Bottom Copyright & Brand Bar -->
+      <div class="footer-bottom-bar pt-4 border-top border-slate-700 d-flex flex-column flex-md-row align-items-center justify-content-between text-slate-300 small gap-2">
+        <p class="mb-0 text-slate-300">&copy; 2026 MULens &bull; Metropolitan University Media Archive</p>
+        <div class="d-flex align-items-center gap-2 text-slate-400">
+          <span class="fst-italic">"Every Memory Has A Story."</span>
         </div>
       </div>
     </div>
@@ -1472,6 +1422,16 @@
           </button>
         </li>
         <li class="nav-item" role="presentation">
+          <button class="nav-link fw-bold small" id="admin-tab-events" data-bs-toggle="pill" data-bs-target="#admin-pane-events" type="button" role="tab">
+            <i class="bi bi-calendar-event-fill me-1 text-success"></i> Campus Events (<span id="admin-events-count-badge">0</span>)
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link fw-bold small" id="admin-tab-voices" data-bs-toggle="pill" data-bs-target="#admin-pane-voices" type="button" role="tab">
+            <i class="bi bi-chat-quote-fill me-1 text-primary"></i> Campus Voices (<span id="admin-voices-count-badge">0</span>)
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
           <button class="nav-link fw-bold small" id="admin-tab-backup" data-bs-toggle="pill" data-bs-target="#admin-pane-backup" type="button" role="tab">
             <i class="bi bi-database-fill-gear me-1 text-primary"></i> Archive Backup
           </button>
@@ -1822,6 +1782,137 @@
           </div>
         </div>
 
+        <!-- Pane 6: Manage Campus Events -->
+        <div class="tab-pane fade" id="admin-pane-events" role="tabpanel">
+          <div class="glass-panel p-4 mb-4">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+              <div>
+                <h5 class="fw-bold font-heading mb-1"><i class="bi bi-calendar-event-fill text-success me-2"></i> Manage Campus Events</h5>
+                <p class="text-muted extra-small mb-0">Create, edit, delete, and publish university events for the public homepage and events schedule. Synced globally via Supabase <code>site-config/events.json</code>.</p>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" id="admin-reset-events-btn">
+                  <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Defaults
+                </button>
+                <button type="button" class="btn btn-success btn-sm rounded-pill fw-bold shadow-sm" id="admin-add-event-btn">
+                  <i class="bi bi-plus-circle-fill me-1"></i> Add New Campus Event
+                </button>
+              </div>
+            </div>
+
+            <!-- Filter and Search Row -->
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 p-3 bg-body-tertiary rounded-3 border">
+              <div class="d-flex align-items-center gap-2">
+                <div class="btn-group btn-group-sm" role="group" id="admin-events-filter-group">
+                  <button type="button" class="btn btn-primary active" data-filter="all">All (<span id="admin-filter-all-count">0</span>)</button>
+                  <button type="button" class="btn btn-outline-primary" data-filter="upcoming">Upcoming (<span id="admin-filter-upcoming-count">0</span>)</button>
+                  <button type="button" class="btn btn-outline-primary" data-filter="today">Today (<span id="admin-filter-today-count">0</span>)</button>
+                  <button type="button" class="btn btn-outline-primary" data-filter="past">Past (<span id="admin-filter-past-count">0</span>)</button>
+                </div>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <div class="input-group input-group-sm" style="width: 260px;">
+                  <span class="input-group-text bg-body border-end-0"><i class="bi bi-search text-muted"></i></span>
+                  <input type="text" class="form-control border-start-0 ps-0" id="admin-events-search-input" placeholder="Search events by title, venue...">
+                </div>
+              </div>
+            </div>
+
+            <!-- Events Table -->
+            <div class="table-responsive">
+              <table class="table table-hover align-middle extra-small">
+                <thead class="table-dark">
+                  <tr>
+                    <th scope="col" style="width: 70px;">Banner</th>
+                    <th scope="col">Event Title & Category</th>
+                    <th scope="col">Date & Time</th>
+                    <th scope="col">Location</th>
+                    <th scope="col">Organizer</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" class="text-end" style="width: 170px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-events-table-body">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+
+            <div id="admin-events-empty-state" class="d-none text-center py-5">
+              <i class="bi bi-calendar-x fs-1 text-muted opacity-50 mb-2 d-block"></i>
+              <h6 class="fw-bold text-muted">No Events Found</h6>
+              <p class="extra-small text-muted mb-0">No campus events match your filter or search query.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pane 6: Campus Voices Moderation & Curation -->
+        <div class="tab-pane fade" id="admin-pane-voices" role="tabpanel">
+          <div class="glass-panel p-4 mb-4">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+              <div>
+                <h5 class="fw-bold font-heading mb-1"><i class="bi bi-chat-quote-fill text-primary me-2"></i> Campus Voices Moderation & Curation</h5>
+                <p class="text-muted extra-small mb-0">Review student thoughts, approve or reject submissions, and select the Featured Campus Voice for the homepage.</p>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" id="admin-refresh-voices-btn">
+                  <i class="bi bi-arrow-clockwise me-1"></i> Refresh Voices
+                </button>
+              </div>
+            </div>
+
+            <!-- Voices Filter and Search Bar -->
+            <div class="row g-3 align-items-center mb-4 p-3 bg-body-tertiary rounded-3 border">
+              <div class="col-md-7 d-flex flex-wrap gap-2" id="admin-voices-filters-group">
+                <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold admin-voices-filter-btn" data-filter="all">
+                  All (<span id="admin-voices-filter-all-count">0</span>)
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold admin-voices-filter-btn" data-filter="pending">
+                  Pending (<span id="admin-voices-filter-pending-count">0</span>)
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold admin-voices-filter-btn" data-filter="approved">
+                  Published (<span id="admin-voices-filter-approved-count">0</span>)
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold admin-voices-filter-btn" data-filter="rejected">
+                  Rejected (<span id="admin-voices-filter-rejected-count">0</span>)
+                </button>
+              </div>
+              <div class="col-md-5">
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text bg-body-secondary"><i class="bi bi-search"></i></span>
+                  <input type="text" id="admin-voices-search-input" class="form-control" placeholder="Search by text, author, department...">
+                </div>
+              </div>
+            </div>
+
+            <!-- Voices Table / List -->
+            <div class="table-responsive">
+              <table class="table table-hover align-middle extra-small">
+                <thead class="table-dark">
+                  <tr>
+                    <th scope="col" style="width: 130px;">Category</th>
+                    <th scope="col">Voice / Thought</th>
+                    <th scope="col" style="width: 150px;">Submitter</th>
+                    <th scope="col" style="width: 140px;">Dept & Batch</th>
+                    <th scope="col" style="width: 120px;">Status</th>
+                    <th scope="col" style="width: 110px;">Submitted</th>
+                    <th scope="col" class="text-end" style="width: 230px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-voices-table-body">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+
+            <div id="admin-voices-empty-state" class="d-none text-center py-5">
+              <i class="bi bi-chat-left-quote fs-1 text-muted opacity-50 mb-2 d-block"></i>
+              <h6 class="fw-bold text-muted">No Campus Voices Found</h6>
+              <p class="extra-small text-muted mb-0">No submissions match your active filter or search query.</p>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -2023,41 +2114,564 @@
     </div>
   </div>
 
-  <!-- RSVP Media Pass Modal -->
-  <div class="modal fade" id="rsvpModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content glass-panel border-0 text-dark">
-        <div class="modal-header border-bottom">
-          <h5 class="modal-title font-heading fw-bold">Request Media Press Pass</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+  <!-- Event Details Discovery Modal -->
+  <div class="modal fade" id="eventDetailsModal" tabindex="-1" aria-labelledby="eventDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content glass-panel border-0 shadow-lg overflow-hidden">
+        <div class="modal-header border-bottom bg-body-tertiary px-4 py-3">
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle" id="modalEventCategoryBadge">Event</span>
+            <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle" id="modalEventStatusBadge">Registration Open</span>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="btn-close-event-modal"></button>
         </div>
         <div class="modal-body p-4">
-          <form id="rsvp-form">
-            <div class="mb-3">
-              <label class="form-label small fw-semibold">Event Name</label>
-              <input type="text" id="rsvpEventName" class="form-control" readonly>
+          <!-- Event Banner Image -->
+          <div class="position-relative rounded-3 overflow-hidden mb-4 bg-dark" style="max-height: 280px;">
+            <img src="" id="modalEventBanner" alt="Campus Event Banner" class="w-100 object-fit-cover" style="height: 260px;">
+            <div class="position-absolute bottom-0 start-0 end-0 p-3 bg-dark bg-opacity-75 text-white">
+              <h4 class="font-heading fw-bold mb-1 text-white" id="modalEventTitle">Event Title</h4>
+              <div class="d-flex align-items-center gap-2 extra-small text-light opacity-90">
+                <span id="modalEventOrganizerSub"><i class="bi bi-people me-1"></i> Organizer</span>
+              </div>
             </div>
-            <div class="mb-3">
-              <label for="rsvpName" class="form-label small fw-semibold">Full Name</label>
-              <input type="text" id="rsvpName" class="form-control" placeholder="e.g. Alex Rivera" required>
+          </div>
+
+          <!-- Organizer Info Row -->
+          <div class="d-flex align-items-center gap-3 p-3 bg-body-secondary rounded-3 border mb-4">
+            <img src="" id="modalEventOrganizerLogo" alt="Organizer Logo" class="rounded-circle border" style="width: 44px; height: 44px; object-fit: cover;">
+            <div class="flex-grow-1">
+              <div class="fw-bold text-main" id="modalEventOrganizerName">Club / Organization Name</div>
+              <div class="text-muted extra-small" id="modalEventOrganizerRole">Official University Club & Chapter</div>
             </div>
-            <div class="mb-3">
-              <label for="rsvpEmail" class="form-label small fw-semibold">University Email</label>
-              <input type="email" id="rsvpEmail" class="form-control" placeholder="alex.rivera@university.edu" required>
+            <span class="badge bg-secondary-subtle text-secondary extra-small border">Verified Campus Club</span>
+          </div>
+
+          <!-- Event Key Specifications Grid -->
+          <div class="row g-3 mb-4">
+            <div class="col-6 col-md-4">
+              <div class="event-modal-meta-box">
+                <i class="bi bi-calendar3"></i>
+                <div class="overflow-hidden">
+                  <div class="text-muted extra-small text-uppercase">Date</div>
+                  <div class="fw-bold text-truncate" id="modalEventDate">May 15, 2026</div>
+                </div>
+              </div>
             </div>
+            <div class="col-6 col-md-4">
+              <div class="event-modal-meta-box">
+                <i class="bi bi-clock"></i>
+                <div class="overflow-hidden">
+                  <div class="text-muted extra-small text-uppercase">Time</div>
+                  <div class="fw-bold text-truncate" id="modalEventTime">5:30 PM - 10:00 PM</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-md-4">
+              <div class="event-modal-meta-box">
+                <i class="bi bi-geo-alt-fill"></i>
+                <div class="overflow-hidden">
+                  <div class="text-muted extra-small text-uppercase">Venue</div>
+                  <div class="fw-bold text-truncate" id="modalEventLocation">Auditorium & Lawns</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-4">
+              <div class="event-modal-meta-box">
+                <i class="bi bi-person-check-fill"></i>
+                <div class="overflow-hidden">
+                  <div class="text-muted extra-small text-uppercase">Eligibility</div>
+                  <div class="fw-bold text-truncate" id="modalEventAudience">All Students</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-4">
+              <div class="event-modal-meta-box">
+                <i class="bi bi-ticket-perforated-fill"></i>
+                <div class="overflow-hidden">
+                  <div class="text-muted extra-small text-uppercase">Entry Fee</div>
+                  <div class="fw-bold text-truncate" id="modalEventEntryFee">Free Entry</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-md-4">
+              <div class="event-modal-meta-box">
+                <i class="bi bi-hourglass-split"></i>
+                <div class="overflow-hidden">
+                  <div class="text-muted extra-small text-uppercase">Deadline</div>
+                  <div class="fw-bold text-truncate" id="modalEventDeadline">May 14, 2026</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Description Section -->
+          <div class="mb-4">
+            <h6 class="fw-bold text-main mb-2"><i class="bi bi-card-text me-1 text-primary"></i> About This Event</h6>
+            <p class="text-muted small lh-base mb-3" id="modalEventDescription">
+              Detailed event overview.
+            </p>
+          </div>
+
+          <!-- Key Highlights / Program Agenda -->
+          <div class="mb-4" id="modalEventHighlightsWrap">
+            <h6 class="fw-bold text-main mb-2"><i class="bi bi-stars me-1 text-warning"></i> Event Highlights & Agenda</h6>
+            <ul class="list-unstyled mb-0 d-flex flex-column gap-2" id="modalEventHighlightsList">
+              <!-- Dynamically populated -->
+            </ul>
+          </div>
+
+          <!-- Inquiries & Contact -->
+          <div class="p-3 bg-body-tertiary rounded-3 border d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div class="extra-small text-muted">
+              <span class="fw-semibold text-main">Have inquiries? Contact organizers: </span>
+              <span id="modalEventContact">events@university.edu</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer border-top bg-body-tertiary px-4 py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="modalEventShareBtn">
+              <i class="bi bi-share-fill me-1"></i> Share
+            </button>
+            <button type="button" class="btn btn-outline-primary btn-sm" id="modalEventCalendarBtn">
+              <i class="bi bi-calendar-plus me-1"></i> Add to Calendar
+            </button>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-gradient btn-sm px-4" id="modalEventRegisterBtn">
+              <i class="bi bi-check2-circle me-1"></i> Register / Join Event
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- All Campus Events Modal -->
+  <div class="modal fade" id="allEventsModal" tabindex="-1" aria-labelledby="allEventsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+      <div class="modal-content glass-panel border-0 shadow-2xl overflow-hidden">
+        <div class="modal-header border-bottom bg-body-tertiary px-4 py-3">
+          <div class="d-flex align-items-center gap-2">
+            <div class="p-2 bg-primary bg-opacity-10 text-primary rounded-circle">
+              <i class="bi bi-calendar-event fs-5"></i>
+            </div>
+            <div>
+              <h5 class="modal-title font-heading fw-bold mb-0" id="allEventsModalLabel">All Campus Events & Activities</h5>
+              <div class="text-muted extra-small">Browse upcoming schedule, concerts, contests, sports, and cultural festivals across campus.</div>
+            </div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body p-4 bg-body-tertiary">
+          <!-- Search & Filter Controls -->
+          <div class="p-3 bg-body rounded-3 border mb-4 shadow-sm">
+            <div class="row g-3 align-items-center">
+              <div class="col-md-6">
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text bg-body-tertiary border-end-0"><i class="bi bi-search text-muted"></i></span>
+                  <input type="text" class="form-control border-start-0 ps-0" id="modal-events-search-input" placeholder="Search events by title, organizer, or venue...">
+                </div>
+              </div>
+              <div class="col-md-6 d-flex justify-content-md-end flex-wrap gap-1" id="modal-event-category-filters">
+                <button class="modal-category-pill active btn btn-xs btn-primary" data-cat="all">All</button>
+                <button class="modal-category-pill btn btn-xs btn-outline-secondary" data-cat="Music Concert">Music</button>
+                <button class="modal-category-pill btn btn-xs btn-outline-secondary" data-cat="Tech & Coding">Tech</button>
+                <button class="modal-category-pill btn btn-xs btn-outline-secondary" data-cat="Sports & Athletics">Sports</button>
+                <button class="modal-category-pill btn btn-xs btn-outline-secondary" data-cat="Cultural & Arts">Cultural</button>
+                <button class="modal-category-pill btn btn-xs btn-outline-secondary" data-cat="Workshop & Seminar">Workshops</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- All Events Grid List -->
+          <div class="row g-4" id="all-events-modal-grid">
+            <!-- Populated dynamically -->
+          </div>
+
+          <!-- Empty State in All Events Modal -->
+          <div id="all-events-modal-empty" class="d-none text-center py-5">
+            <i class="bi bi-calendar-x fs-1 text-muted opacity-50 mb-2 d-block"></i>
+            <h6 class="fw-bold text-muted">No Events Found</h6>
+            <p class="extra-small text-muted mb-0">No campus events match your selected category or search filter.</p>
+          </div>
+        </div>
+
+        <div class="modal-footer border-top bg-body-tertiary px-4 py-2.5 d-flex justify-content-between">
+          <span class="extra-small text-muted"><span id="all-events-modal-count">0</span> campus events listed</span>
+          <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Add / Edit Event Modal -->
+  <div class="modal fade" id="adminEventModal" tabindex="-1" aria-labelledby="adminEventModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+      <div class="modal-content glass-panel border-0 shadow-2xl overflow-hidden">
+        <div class="modal-header border-bottom bg-body-tertiary px-4 py-3">
+          <div class="d-flex align-items-center gap-2">
+            <div class="p-2 bg-success bg-opacity-10 text-success rounded-circle">
+              <i class="bi bi-calendar-plus-fill fs-5" id="adminEventModalIcon"></i>
+            </div>
+            <div>
+              <h5 class="modal-title font-heading fw-bold mb-0" id="adminEventModalTitle">Add New Campus Event</h5>
+              <div class="text-muted extra-small">Publish or update campus events. Syncs instantly to <code>events.json</code>.</div>
+            </div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body p-4">
+          <form id="admin-event-form">
+            <input type="hidden" id="adminEventId">
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-8">
+                <label class="form-label extra-small fw-bold">Event Title *</label>
+                <input type="text" id="adminEventTitle" class="form-control" placeholder="e.g. Spring Campus Acoustic Night" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label extra-small fw-bold">Category *</label>
+                <select id="adminEventCategory" class="form-select" required>
+                  <option value="Music Concert">Music Concert</option>
+                  <option value="Tech & Coding">Tech & Coding</option>
+                  <option value="Sports & Athletics">Sports & Athletics</option>
+                  <option value="Cultural & Arts">Cultural & Arts</option>
+                  <option value="Workshop & Seminar">Workshop & Seminar</option>
+                  <option value="Recruitment & Carnival">Recruitment & Carnival</option>
+                  <option value="Academic & Seminar">Academic & Seminar</option>
+                  <option value="Campus Life">Campus Life</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Banner Image URL with Quick Presets -->
             <div class="mb-3">
-              <label for="rsvpRole" class="form-label small fw-semibold">Media Role</label>
-              <select id="rsvpRole" class="form-select">
-                <option value="photographer">Student Photographer</option>
-                <option value="videographer">Videographer</option>
-                <option value="press">Campus Journalist</option>
-                <option value="guest">Spectator</option>
+              <label class="form-label extra-small fw-bold">Banner Image URL *</label>
+              <input type="url" id="adminEventImgUrl" class="form-control" placeholder="https://images.unsplash.com/..." required>
+              <div class="d-flex flex-wrap gap-1 mt-1.5 align-items-center">
+                <span class="extra-small text-muted me-1">Quick Presets:</span>
+                <button type="button" class="btn btn-outline-secondary btn-xs py-0 admin-event-img-preset" data-url="https://images.unsplash.com/photo-1501386761578-eac5c94b800a?q=80&w=1200&auto=format&fit=crop">Concert</button>
+                <button type="button" class="btn btn-outline-secondary btn-xs py-0 admin-event-img-preset" data-url="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=1200&auto=format&fit=crop">Hackathon</button>
+                <button type="button" class="btn btn-outline-secondary btn-xs py-0 admin-event-img-preset" data-url="https://images.unsplash.com/photo-1461896836934-ffe607ba8211?q=80&w=1200&auto=format&fit=crop">Sports</button>
+                <button type="button" class="btn btn-outline-secondary btn-xs py-0 admin-event-img-preset" data-url="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1200&auto=format&fit=crop">Cultural</button>
+                <button type="button" class="btn btn-outline-secondary btn-xs py-0 admin-event-img-preset" data-url="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?q=80&w=1200&auto=format&fit=crop">Robotics/AI</button>
+                <button type="button" class="btn btn-outline-secondary btn-xs py-0 admin-event-img-preset" data-url="https://images.unsplash.com/photo-1523580494863-6f3031224c94?q=80&w=1200&auto=format&fit=crop">Carnival</button>
+              </div>
+            </div>
+
+            <!-- Date, Time, Status Grid -->
+            <div class="row g-3 mb-3">
+              <div class="col-md-4 col-6">
+                <label class="form-label extra-small fw-bold">Date Display *</label>
+                <input type="text" id="adminEventDate" class="form-control form-control-sm" placeholder="e.g. MAY 25, 2026" required>
+              </div>
+              <div class="col-md-2 col-3">
+                <label class="form-label extra-small fw-bold">Day</label>
+                <input type="text" id="adminEventDay" class="form-control form-control-sm" placeholder="25">
+              </div>
+              <div class="col-md-2 col-3">
+                <label class="form-label extra-small fw-bold">Month</label>
+                <input type="text" id="adminEventMonth" class="form-control form-control-sm" placeholder="MAY">
+              </div>
+              <div class="col-md-4 col-12">
+                <label class="form-label extra-small fw-bold">Time Range *</label>
+                <input type="text" id="adminEventTime" class="form-control form-control-sm" placeholder="e.g. 5:30 PM - 9:30 PM" required>
+              </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6 col-12">
+                <label class="form-label extra-small fw-bold">Status Badge *</label>
+                <select id="adminEventStatus" class="form-select form-select-sm" required>
+                  <option value="Upcoming">Upcoming</option>
+                  <option value="Registration Open" selected>Registration Open</option>
+                  <option value="Limited Seats Left">Limited Seats Left</option>
+                  <option value="Fast Filling">Fast Filling</option>
+                  <option value="Today">Happening Today</option>
+                  <option value="Completed">Completed / Past</option>
+                </select>
+              </div>
+              <div class="col-md-6 col-12">
+                <label class="form-label extra-small fw-bold">Target Audience / Eligibility</label>
+                <input type="text" id="adminEventAudience" class="form-control form-control-sm" placeholder="e.g. Open for All Students & Faculty">
+              </div>
+            </div>
+
+            <!-- Location & Venue Details -->
+            <div class="row g-3 mb-3">
+              <div class="col-md-7">
+                <label class="form-label extra-small fw-bold">Location / Venue *</label>
+                <input type="text" id="adminEventLocation" class="form-control form-control-sm" placeholder="e.g. Main University Amphitheater & Green Lawn" required>
+              </div>
+              <div class="col-md-5">
+                <label class="form-label extra-small fw-bold">Specific Hall / Stage</label>
+                <input type="text" id="adminEventVenueDetail" class="form-control form-control-sm" placeholder="e.g. Open Air Stage A">
+              </div>
+            </div>
+
+            <!-- Organizer Info -->
+            <div class="row g-3 mb-3 p-3 bg-body-tertiary rounded-3 border">
+              <div class="col-md-5">
+                <label class="form-label extra-small fw-bold">Organizer / Club Name *</label>
+                <input type="text" id="adminEventOrganizer" class="form-control form-control-sm" placeholder="e.g. MU Music Club & Cultural Affairs" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label extra-small fw-bold">Organizer Role</label>
+                <input type="text" id="adminEventOrganizerRole" class="form-control form-control-sm" placeholder="e.g. Official Student Society">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label extra-small fw-bold">Logo URL</label>
+                <input type="url" id="adminEventOrganizerLogo" class="form-control form-control-sm" placeholder="https://...">
+              </div>
+            </div>
+
+            <!-- Participation & Registration Grid -->
+            <div class="row g-3 mb-3">
+              <div class="col-md-4">
+                <label class="form-label extra-small fw-bold">Entry Fee</label>
+                <input type="text" id="adminEventEntryFee" class="form-control form-control-sm" placeholder="e.g. Free Entry with Student ID">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label extra-small fw-bold">Registration Deadline</label>
+                <input type="text" id="adminEventDeadline" class="form-control form-control-sm" placeholder="e.g. May 24, 2026 or Walk-in">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label extra-small fw-bold">Registration Form Link / URL</label>
+                <input type="url" id="adminEventRegUrl" class="form-control form-control-sm" placeholder="https://forms.gle/... or club website">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label extra-small fw-bold">Inquiries Email</label>
+                <input type="email" id="adminEventContactEmail" class="form-control form-control-sm" placeholder="events@university.edu">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label extra-small fw-bold">Inquiries Phone</label>
+                <input type="text" id="adminEventContactPhone" class="form-control form-control-sm" placeholder="+880 1700-123456">
+              </div>
+            </div>
+
+            <!-- Highlights & Overview -->
+            <div class="mb-3">
+              <label class="form-label extra-small fw-bold">Key Highlights (1 item per line)</label>
+              <textarea id="adminEventHighlights" class="form-control form-control-sm" rows="3" placeholder="Live performances by 8 student indie bands&#10;Food trucks, photo booths & neon merchandise&#10;Special acoustic reunion set"></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label extra-small fw-bold">Event Description / Overview *</label>
+              <textarea id="adminEventDesc" class="form-control" rows="3" placeholder="Detailed summary of this campus event..." required></textarea>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+              <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-success btn-sm px-4 rounded-pill fw-bold shadow-sm" id="adminEventSaveBtn">
+                <i class="bi bi-check-circle-fill me-1"></i> Save Campus Event
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Share Your Campus Voice Modal -->
+  <div class="modal fade" id="shareVoiceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content glass-panel p-4 text-dark border-0">
+        <div class="modal-header border-bottom pb-3">
+          <div class="d-flex align-items-center gap-2">
+            <div class="p-2 bg-primary bg-opacity-10 text-primary rounded-circle">
+              <i class="bi bi-chat-quote-fill fs-5"></i>
+            </div>
+            <div>
+              <h5 class="font-heading fw-bold mb-0">Share Your Campus Voice</h5>
+              <span class="text-muted extra-small">Share a memory, appreciation, campus reflection, or suggestion.</span>
+            </div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body py-3">
+          <form id="share-voice-form">
+            <div id="voice-user-info-banner" class="alert alert-light border d-flex align-items-center gap-2 p-2 mb-3 extra-small">
+              <i class="bi bi-info-circle text-primary fs-6"></i>
+              <span id="voice-user-info-text">Submissions are reviewed by campus moderators before being published.</span>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label extra-small fw-bold">Category *</label>
+              <select id="voiceSubmitCategory" class="form-select form-select-sm" required>
+                <option value="Campus Memory" selected>Campus Memory (Nostalgia & Moments)</option>
+                <option value="Appreciation">Appreciation (Faculty, Peers & Staff)</option>
+                <option value="University Life">University Life (Daily Campus Vibes)</option>
+                <option value="Club & Events">Club & Events (Festival & Society Memories)</option>
+                <option value="Suggestion">Suggestion (Ideas for Campus Community)</option>
               </select>
             </div>
-            <button type="submit" class="btn btn-gradient w-100 py-2">
-              <i class="bi bi-ticket-perforated-fill"></i> Confirm Pass
-            </button>
+
+            <div class="mb-3">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label extra-small fw-bold mb-0">Your Voice / Thought *</label>
+                <span class="extra-small text-muted"><span id="voice-char-count">0</span> / 400</span>
+              </div>
+              <textarea id="voiceSubmitText" class="form-control" rows="4" maxlength="400" placeholder="Share your experience, an inspiring campus memory, or what makes Metropolitan University special to you..." required></textarea>
+              <div class="form-text extra-small">Keep it respectful, authentic, and constructive (5-400 characters).</div>
+            </div>
+
+            <div class="row g-2 mb-3">
+              <div class="col-md-6">
+                <label class="form-label extra-small fw-bold">Your Name</label>
+                <input type="text" id="voiceSubmitName" class="form-control form-control-sm" placeholder="e.g. Elena Rostova">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label extra-small fw-bold">Department</label>
+                <input type="text" id="voiceSubmitDept" class="form-control form-control-sm" placeholder="e.g. CSE / BBA / English">
+              </div>
+              <div class="col-12">
+                <label class="form-label extra-small fw-bold">Batch / Semester</label>
+                <input type="text" id="voiceSubmitBatch" class="form-control form-control-sm" placeholder="e.g. 59th Batch or Class of '26">
+              </div>
+            </div>
+
+            <div class="form-check form-switch mb-3 p-2 bg-body-tertiary rounded-3 border ps-5">
+              <input class="form-check-input ms-n4" type="checkbox" role="switch" id="voiceSubmitAnonymous">
+              <label class="form-check-label extra-small fw-bold d-block" for="voiceSubmitAnonymous">
+                Post anonymously
+                <span class="d-block text-muted fw-normal" style="font-size: 0.72rem;">Your name and avatar will be hidden publicly, displaying as "Anonymous Student".</span>
+              </label>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+              <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary btn-sm px-4 rounded-pill fw-bold shadow-sm" id="submitVoiceBtn">
+                <i class="bi bi-send-fill me-1"></i> Submit Campus Voice
+              </button>
+            </div>
           </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- All Campus Voices Archive Modal -->
+  <div class="modal fade" id="allVoicesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+      <div class="modal-content glass-panel p-4 text-dark border-0">
+        <div class="modal-header border-bottom pb-3">
+          <div class="d-flex align-items-center gap-2">
+            <div class="p-2 bg-primary bg-opacity-10 text-primary rounded-circle">
+              <i class="bi bi-chat-square-quote-fill fs-5"></i>
+            </div>
+            <div>
+              <h5 class="font-heading fw-bold mb-0">All Campus Voices</h5>
+              <span class="text-muted extra-small">Published community stories, thoughts, and reflections from across campus.</span>
+            </div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body py-4">
+          <!-- Category Filter in Modal -->
+          <div class="d-flex flex-wrap gap-2 mb-4" id="all-voices-category-filters">
+            <button class="btn btn-sm btn-primary rounded-pill px-3 active voice-modal-filter-btn" data-category="all">All Stories</button>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 voice-modal-filter-btn" data-category="Campus Memory">Campus Memory</button>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 voice-modal-filter-btn" data-category="Appreciation">Appreciation</button>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 voice-modal-filter-btn" data-category="University Life">University Life</button>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 voice-modal-filter-btn" data-category="Club & Events">Club & Events</button>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 voice-modal-filter-btn" data-category="Suggestion">Suggestion</button>
+          </div>
+          
+          <div class="row g-4" id="all-voices-grid-container">
+            <!-- Dynamically populated -->
+          </div>
+          
+          <div id="all-voices-empty" class="d-none text-center py-5">
+            <i class="bi bi-chat-quote fs-1 text-muted opacity-50 mb-2 d-block"></i>
+            <h6 class="fw-bold text-muted">No Voices In This Category</h6>
+            <p class="extra-small text-muted mb-0">Select another category or share your voice to be featured here.</p>
+          </div>
+        </div>
+        <div class="modal-footer border-top pt-3">
+          <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary btn-sm px-4 rounded-pill fw-bold" id="all-voices-modal-share-btn">
+            <i class="bi bi-pencil-square me-1"></i> Share Your Voice
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin View Voice Modal -->
+  <div class="modal fade" id="viewVoiceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content glass-panel p-4 text-dark border-0">
+        <div class="modal-header border-bottom pb-3">
+          <div class="d-flex align-items-center gap-2">
+            <div class="p-2 bg-info bg-opacity-10 text-info rounded-circle">
+              <i class="bi bi-eye-fill fs-5"></i>
+            </div>
+            <div>
+              <h5 class="font-heading fw-bold mb-0">Voice Submission Details</h5>
+              <span class="text-muted extra-small" id="admin-view-voice-id">ID: -</span>
+            </div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body py-3">
+          <div class="mb-3 d-flex align-items-center justify-content-between">
+            <span id="admin-view-voice-category" class="voice-category-badge voice-badge-memory">Category</span>
+            <span id="admin-view-voice-status" class="badge bg-secondary-subtle text-secondary">Status</span>
+          </div>
+          <div class="p-3 bg-body-tertiary rounded-3 border mb-3">
+            <p class="voice-quote-text mb-0" id="admin-view-voice-text" style="white-space: pre-wrap;"></p>
+          </div>
+          <div class="row g-2 extra-small text-muted border-top pt-3">
+            <div class="col-6"><strong>Submitter:</strong> <span id="admin-view-voice-name">-</span></div>
+            <div class="col-6"><strong>Department:</strong> <span id="admin-view-voice-dept">-</span></div>
+            <div class="col-6"><strong>Batch:</strong> <span id="admin-view-voice-batch">-</span></div>
+            <div class="col-6"><strong>Anonymous:</strong> <span id="admin-view-voice-anon">-</span></div>
+            <div class="col-12"><strong>Date Submitted:</strong> <span id="admin-view-voice-date">-</span></div>
+          </div>
+        </div>
+        <div class="modal-footer border-top pt-3" id="admin-view-voice-actions">
+          <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Voice Confirmation Modal -->
+  <div class="modal fade" id="deleteVoiceConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content glass-panel p-4 text-dark border-0">
+        <div class="modal-header border-bottom pb-3">
+          <div class="d-flex align-items-center gap-2">
+            <div class="p-2 bg-danger bg-opacity-10 text-danger rounded-circle">
+              <i class="bi bi-trash-fill fs-5"></i>
+            </div>
+            <div>
+              <h5 class="font-heading fw-bold mb-0 text-danger">Delete Campus Voice</h5>
+              <span class="text-muted extra-small">Confirm permanent removal</span>
+            </div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body py-3">
+          <p class="text-muted small mb-2">Are you sure you want to permanently delete this campus voice submission?</p>
+          <div class="p-3 bg-danger-subtle text-danger rounded-3 extra-small mb-2">
+            <strong>Warning:</strong> This action cannot be undone.
+          </div>
+          <div class="p-2 bg-body-tertiary rounded-3 border extra-small text-muted" id="delete-voice-preview-text">
+            ...
+          </div>
+        </div>
+        <div class="modal-footer border-top pt-3">
+          <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger btn-sm px-4 rounded-pill fw-bold" id="confirm-delete-voice-btn">
+            <i class="bi bi-trash-fill me-1"></i> Permanently Delete
+          </button>
         </div>
       </div>
     </div>
@@ -2915,6 +3529,77 @@
           <button type="button" class="btn btn-gradient btn-sm px-4 rounded-pill fw-semibold shadow-sm" id="adminVerificationSubmitBtn">
             <i class="bi bi-cloud-upload-fill me-1"></i> Start Migration
           </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- About MULens Modal -->
+  <div class="modal fade" id="aboutMULensModal" tabindex="-1" aria-labelledby="aboutMULensModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content glass-panel border-0 shadow-lg text-dark">
+        <div class="modal-header border-bottom py-3">
+          <h5 class="modal-title font-heading fw-bold fs-5 text-primary d-flex align-items-center gap-2 mb-0" id="aboutMULensModalLabel">
+            <div class="brand-icon-wrapper me-1">
+              <i class="bi bi-camera2"></i>
+            </div>
+            About MULens
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body py-4 px-4">
+          <div class="mb-4">
+            <h6 class="fw-bold text-main mb-2">Preserving Metropolitan University Memories</h6>
+            <p class="text-secondary small leading-relaxed mb-3">
+              <strong>MULens</strong> is the digital media archive of <strong>Metropolitan University</strong>, Sylhet, Bangladesh. It is dedicated to documenting, archiving, and showcasing the vibrant campus life, historic university milestones, academic ceremonies, cultural celebrations, sports triumphs, and everyday moments.
+            </p>
+            <p class="text-secondary small leading-relaxed mb-0">
+              Through collaborative student photojournalism and community submissions, MULens ensures every campus story, perspective, and voice is immortalized for current students, alumni, faculty, and future generations.
+            </p>
+          </div>
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">
+              <div class="p-3 bg-body-tertiary rounded-3 border h-100">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <i class="bi bi-camera-fill text-primary fs-5"></i>
+                  <span class="fw-bold text-main small">Media Archive</span>
+                </div>
+                <p class="extra-small text-muted mb-0">High-resolution visual preservation of university life and milestones.</p>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="p-3 bg-body-tertiary rounded-3 border h-100">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <i class="bi bi-chat-quote-fill text-success fs-5"></i>
+                  <span class="fw-bold text-main small">Campus Voices</span>
+                </div>
+                <p class="extra-small text-muted mb-0">Direct thoughts, stories, and reflections from students across all departments.</p>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="p-3 bg-body-tertiary rounded-3 border h-100">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <i class="bi bi-star-fill text-warning fs-5"></i>
+                  <span class="fw-bold text-main small">Spotlight</span>
+                </div>
+                <p class="extra-small text-muted mb-0">Photo of the Week spotlighting exceptional campus photography.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-3 bg-primary-subtle rounded-3 border border-primary-subtle d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div>
+              <span class="d-block fw-bold text-primary small">Metropolitan University</span>
+              <span class="text-secondary extra-small">Bateshwar, Sylhet-3103, Bangladesh</span>
+            </div>
+            <a href="https://metrouni.edu.bd/" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold">
+              <i class="bi bi-box-arrow-up-right me-1"></i> Visit University Website
+            </a>
+          </div>
+        </div>
+        <div class="modal-footer border-top p-3 d-flex justify-content-end">
+          <button type="button" class="btn btn-light btn-sm px-4 rounded-pill text-dark" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
