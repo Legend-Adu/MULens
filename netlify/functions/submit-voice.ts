@@ -1,3 +1,4 @@
+import { verifyIdentity, hasBearerHeader, authError } from '../lib/authorization.js';
 import { createClient } from '@supabase/supabase-js';
 
 function getServerConfig() {
@@ -6,9 +7,7 @@ function getServerConfig() {
       process.env.VITE_SUPABASE_URL ||
       'https://ggblwkqprciadgdxibip.supabase.co',
     serviceRoleKey:
-      process.env.SUPABASE_SERVICE_ROLE_KEY || '',
-    adminSecretKey:
-      process.env.ADMIN_SECRET_KEY || ''
+      process.env.SUPABASE_SERVICE_ROLE_KEY || ''
   };
 }
 
@@ -129,6 +128,10 @@ export async function handler(event: any) {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
   }
 
+  const identity = hasBearerHeader(event) ? await verifyIdentity(event) : null;
+  if (identity && identity.ok === false) return authError(identity, headers);
+  const signedUser = identity?.ok === true ? identity.user : null;
+
   let payload: any = {};
   try {
     payload = JSON.parse(event.body || '{}');
@@ -163,8 +166,8 @@ export async function handler(event: any) {
   const name = anonymous ? 'Anonymous Student' : (rawName || 'Anonymous Student');
   const department = typeof payload.department === 'string' ? payload.department.trim().substring(0, 50) : '';
   const batch = typeof payload.batch === 'string' ? payload.batch.trim().substring(0, 50) : '';
-  const avatarUrl = typeof payload.avatarUrl === 'string' ? payload.avatarUrl.trim() : '';
-  const userId = typeof payload.userId === 'string' ? payload.userId.trim() : '';
+  const avatarUrl = signedUser?.avatar || '';
+  const userId = signedUser?.id || '';
 
   // Generate unique ID
   const randomSuffix = Math.random().toString(36).substring(2, 7);

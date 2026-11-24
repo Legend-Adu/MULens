@@ -1,3 +1,4 @@
+import { requireAdmin, authError } from '../lib/authorization.js';
 import { createClient } from '@supabase/supabase-js';
 
 function getServerConfig() {
@@ -7,10 +8,7 @@ function getServerConfig() {
       'https://ggblwkqprciadgdxibip.supabase.co',
 
     serviceRoleKey:
-      process.env.SUPABASE_SERVICE_ROLE_KEY || '',
-
-    adminSecretKey:
-      process.env.ADMIN_SECRET_KEY || ''
+      process.env.SUPABASE_SERVICE_ROLE_KEY || ''
   };
 }
 const BUCKET_NAME = 'mulens-media';
@@ -34,7 +32,7 @@ function getAdminClient() {
 export async function handler(event: any) {
   const headers = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-admin-secret',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Content-Type': 'application/json'
   };
@@ -46,24 +44,8 @@ export async function handler(event: any) {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
   }
-  const { serviceRoleKey, adminSecretKey } = getServerConfig();
-  // Ensure server environment is configured for privileged operations
-  if (!serviceRoleKey) {
-    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Server misconfiguration: SUPABASE_SERVICE_ROLE_KEY not configured.' }) };
-  }
-  if (!adminSecretKey) {
-    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Server misconfiguration: ADMIN_SECRET_KEY not configured.' }) };
-  }
-
-  const requestAdminSecret = event.headers['x-admin-secret'] || event.headers['X-Admin-Secret'] || (event.headers['authorization'] ? event.headers['authorization'].replace('Bearer ', '') : '');
-
-  if (requestAdminSecret !== adminSecretKey) {
-    return {
-      statusCode: 401,
-      headers,
-      body: JSON.stringify({ error: 'Unauthorized: Invalid or missing x-admin-secret header.' })
-    };
-  }
+  const authorization = await requireAdmin(event);
+  if (authorization.ok === false) return authError(authorization, headers);
 
   try {
     const supabaseAdmin = getAdminClient();

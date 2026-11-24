@@ -16,6 +16,17 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   }
 });
 
+// Send the current session access token to server APIs, never a service key.
+export async function sessionHeaders(required = true) {
+  const { data, error } = await supabase.auth.getSession();
+  const token = data?.session?.access_token;
+  if (error || !token) {
+    if (required) throw new Error('Please sign in again.');
+    return {};
+  }
+  return { Authorization: `Bearer ${token}` };
+}
+
 // Cache for memories loaded from Supabase Cloud
 export let cachedCloudMemories = [];
 export let isSupabaseConnected = false;
@@ -86,7 +97,7 @@ export async function fetchPOTWFromSupabase() {
 }
 
 /**
- * Set POTW via serverless API which uses service role key. Requires x-admin-secret header.
+ * Set POTW via serverless API which uses service role key. Requires a verified Admin session with MFA.
  */
 export async function setPOTWOnServer({ memId = null, custom = null, adminSecret = '' } = {}) {
   try {
@@ -94,7 +105,7 @@ export async function setPOTWOnServer({ memId = null, custom = null, adminSecret
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-admin-secret': adminSecret
+        ...(await sessionHeaders())
       },
       body: JSON.stringify({ action: 'set', memId, custom })
     });
@@ -155,7 +166,7 @@ export async function fetchEventsFromSupabase() {
 }
 
 /**
- * Manage Campus Events via serverless API (create, update, delete, reset). Requires x-admin-secret header.
+ * Manage Campus Events via serverless API (create, update, delete, reset). Requires a verified Admin session with MFA.
  */
 export async function manageEventOnServer({ action = 'get', event = null, eventId = null, events = null, adminSecret = '' } = {}) {
   try {
@@ -163,7 +174,7 @@ export async function manageEventOnServer({ action = 'get', event = null, eventI
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-admin-secret': adminSecret
+        ...(await sessionHeaders())
       },
       body: JSON.stringify({ action, event, eventId, events })
     });
@@ -278,7 +289,7 @@ export async function submitCampusVoice(payload) {
     const res = await fetch('/api/submit-voice', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json', ...(await sessionHeaders(false))
       },
       body: JSON.stringify(payload)
     });
@@ -293,7 +304,7 @@ export async function submitCampusVoice(payload) {
 }
 
 /**
- * Manage Campus Voices via serverless API (approve, reject, delete, feature, unfeature, get_admin). Requires x-admin-secret header.
+ * Manage Campus Voices via serverless API (approve, reject, delete, feature, unfeature, get_admin). Requires a verified Admin session with MFA.
  */
 export async function manageVoiceOnServer({ action = 'get_admin', voiceId = null, adminSecret = '' } = {}) {
   try {
@@ -301,7 +312,7 @@ export async function manageVoiceOnServer({ action = 'get_admin', voiceId = null
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-admin-secret': adminSecret
+        ...(await sessionHeaders())
       },
       body: JSON.stringify({ action, voiceId })
     });
@@ -367,10 +378,26 @@ export async function saveMemoryToSupabase(mem) {
   if (!mem || !mem.id) return false;
 
   try {
+    const toServerImage = async (source) => {
+      if (typeof source !== 'string' || !source.startsWith('blob:')) return source;
+      const response = await fetch(source);
+      if (!response.ok) throw new Error('Unable to read local photo.');
+      const blob = await response.blob();
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Unable to encode photo.'));
+        reader.readAsDataURL(blob);
+      });
+    };
+    const payload = { ...mem,
+      imageUrl: await toServerImage(mem.imageUrl),
+      albumImages: await Promise.all((mem.albumImages || []).map(toServerImage))
+    };
     const res = await fetch('/api/submit', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(mem)
+      headers: { 'Content-Type': 'application/json', ...(await sessionHeaders()) },
+      body: JSON.stringify(payload)
     });
 
     if (!res.ok) {
@@ -392,13 +419,12 @@ export async function saveMemoryToSupabase(mem) {
  */
 export async function updateMemoryStatusInSupabase(memId, status, approvedBy = null, adminSecretKey = null) {
   if (!memId) return false;
-  const secretHeader = adminSecretKey || sessionStorage.getItem('mulens_admin_secret') || '';
   try {
     const res = await fetch('/api/admin-action', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-admin-secret': secretHeader
+        ...(await sessionHeaders())
       },
       body: JSON.stringify({
         action: status === 'approved' ? 'approve' : (status === 'rejected' ? 'reject' : status),
@@ -426,13 +452,12 @@ export async function updateMemoryStatusInSupabase(memId, status, approvedBy = n
  */
 export async function deleteMemoryFromSupabase(memId, adminSecretKey = null) {
   if (!memId) return false;
-  const secretHeader = adminSecretKey || sessionStorage.getItem('mulens_admin_secret') || '';
   try {
     const res = await fetch('/api/admin-action', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-admin-secret': secretHeader
+        ...(await sessionHeaders())
       },
       body: JSON.stringify({
         action: 'delete',
@@ -483,7 +508,6 @@ export async function migrateIndexedDBToSupabase(onProgress = null, adminSecretK
   let totalFailedImages = 0;
   const allErrors = [];
 
-  const secretHeader = adminSecretKey || sessionStorage.getItem('mulens_admin_secret') || '';
 
   for (let b = 0; b < totalBatches; b++) {
     const startIdx = b * BATCH_SIZE;
@@ -561,7 +585,7 @@ export async function migrateIndexedDBToSupabase(onProgress = null, adminSecretK
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-admin-secret': secretHeader
+        ...(await sessionHeaders())
       },
       body: JSON.stringify({ memories: batchPayload })
     });

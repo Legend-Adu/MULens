@@ -1,13 +1,13 @@
+import { requireAdmin, authError } from '../lib/authorization.js';
 // netlify/functions/admin-action.ts - Serverless handler for admin approval, rejection, and deletion
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://ggblwkqprciadgdxibip.supabase.co';
 // Strictly require SUPABASE_SERVICE_ROLE_KEY from server environment ONLY - never fall back to publishable key
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || '';
 const BUCKET_NAME = 'mulens-media';
 
 function getAdminClient() {
+  const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://ggblwkqprciadgdxibip.supabase.co';
+  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
   if (!SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error('SUPABASE_SERVICE_ROLE_KEY is not configured in server environment variables.');
   }
@@ -19,7 +19,7 @@ function getAdminClient() {
 export async function handler(event: any) {
   const headers = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-admin-secret',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Content-Type': 'application/json'
   };
@@ -32,21 +32,13 @@ export async function handler(event: any) {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
   }
 
-  // Cryptographic / Secret verification of admin authorization
-  const requestAdminSecret = event.headers['x-admin-secret'] || event.headers['X-Admin-Secret'] || (event.headers['authorization'] ? event.headers['authorization'].replace('Bearer ', '') : '');
-
-  if (!ADMIN_SECRET_KEY || requestAdminSecret !== ADMIN_SECRET_KEY) {
-    return {
-      statusCode: 401,
-      headers,
-      body: JSON.stringify({ error: 'Unauthorized: Invalid or missing x-admin-secret header. Admin operations require server-side verification.' })
-    };
-  }
+  const authorization = await requireAdmin(event);
+  if (authorization.ok === false) return authError(authorization, headers);
 
   try {
     const supabaseAdmin = getAdminClient();
     const payload = JSON.parse(event.body || '{}');
-    const { action, memId, approvedBy } = payload;
+    const { action, memId } = payload;
 
     if (!memId || !action) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'memId and action are required.' }) };
@@ -60,7 +52,7 @@ export async function handler(event: any) {
         .update({
           status: 'approved',
           approved_at: Date.now(),
-          approved_by: approvedBy || 'Admin'
+          approved_by: authorization.user.id
         })
         .eq('id', memIdStr);
 
@@ -103,7 +95,7 @@ export async function handler(event: any) {
         albumImgs.forEach((url: string) => {
           if (typeof url === 'string' && url.includes(`/storage/v1/object/public/${BUCKET_NAME}/`)) {
             const path = url.split(`/storage/v1/object/public/${BUCKET_NAME}/`)[1];
-            if (path) storagePathsToDelete.push(path);
+            if (path && path.startsWith(`memories/${memIdStr}/`) && !path.includes('..')) storagePathsToDelete.push(path);
           }
         });
 

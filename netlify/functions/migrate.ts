@@ -1,3 +1,4 @@
+import { requireAdmin, authError } from '../lib/authorization.js';
 // netlify/functions/migrate.ts - Serverless handler for migrating IndexedDB data to Supabase Cloud
 import { createClient } from '@supabase/supabase-js';
 
@@ -6,7 +7,7 @@ const BUCKET_NAME = 'mulens-media';
 export async function handler(event: any) {
   const headers = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-admin-secret',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Content-Type': 'application/json'
   };
@@ -19,10 +20,12 @@ export async function handler(event: any) {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
   }
 
+  const authorization = await requireAdmin(event);
+  if (authorization.ok === false) return authError(authorization, headers);
+
   // Read environment variables dynamically at request time
   const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://ggblwkqprciadgdxibip.supabase.co';
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-  const adminSecretEnv = process.env.ADMIN_SECRET_KEY || '';
 
   // 1. Verify SUPABASE_SERVICE_ROLE_KEY configuration on server
   if (!serviceRoleKey) {
@@ -32,25 +35,6 @@ export async function handler(event: any) {
       headers,
       body: JSON.stringify({
         error: 'Server configuration error: SUPABASE_SERVICE_ROLE_KEY environment variable is not set on the server.'
-      })
-    };
-  }
-
-  // 2. Secret verification of admin authorization header if ADMIN_SECRET_KEY is set on server
-  const requestAdminSecret = (
-    event.headers['x-admin-secret'] ||
-    event.headers['X-Admin-Secret'] ||
-    (event.headers['authorization'] ? event.headers['authorization'].replace(/^Bearer\s+/i, '') : '') ||
-    ''
-  ).trim();
-
-  if (adminSecretEnv && requestAdminSecret !== adminSecretEnv) {
-    console.warn('[Migrate Auth Warning]: Invalid x-admin-secret header provided.');
-    return {
-      statusCode: 401,
-      headers,
-      body: JSON.stringify({
-        error: 'Unauthorized: Invalid x-admin-secret provided. Admin operations require a matching server secret.'
       })
     };
   }

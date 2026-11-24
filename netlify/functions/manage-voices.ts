@@ -1,3 +1,4 @@
+import { requireAdmin, authError } from '../lib/authorization.js';
 import { createClient } from '@supabase/supabase-js';
 
 function getServerConfig() {
@@ -6,9 +7,7 @@ function getServerConfig() {
       process.env.VITE_SUPABASE_URL ||
       'https://ggblwkqprciadgdxibip.supabase.co',
     serviceRoleKey:
-      process.env.SUPABASE_SERVICE_ROLE_KEY || '',
-    adminSecretKey:
-      process.env.ADMIN_SECRET_KEY || ''
+      process.env.SUPABASE_SERVICE_ROLE_KEY || ''
   };
 }
 
@@ -108,7 +107,7 @@ async function saveConfigToStorage(supabaseAdmin: any, config: CampusVoicesConfi
 export async function handler(event: any) {
   const headers = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-admin-secret',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Content-Type': 'application/json'
   };
@@ -119,10 +118,14 @@ export async function handler(event: any) {
 
   // Handle public GET
   if (event.httpMethod === 'GET') {
+    const isPublic = event.queryStringParameters?.public !== 'false';
+    if (!isPublic) {
+      const authorization = await requireAdmin(event);
+      if (authorization.ok === false) return authError(authorization, headers);
+    }
     try {
       const supabaseAdmin = getAdminClient();
       const config = await loadExistingConfig(supabaseAdmin);
-      const isPublic = !event.queryStringParameters || event.queryStringParameters.public === 'true';
 
       if (isPublic) {
         const approvedVoices = config.voices.filter(v => v.status === 'approved');
@@ -134,17 +137,6 @@ export async function handler(event: any) {
             featuredVoiceId: config.featuredVoiceId,
             voices: approvedVoices
           })
-        };
-      }
-
-      // If admin GET requested via query, check admin secret header
-      const { adminSecretKey } = getServerConfig();
-      const reqSecret = event.headers['x-admin-secret'] || event.headers['X-Admin-Secret'] || '';
-      if (!adminSecretKey || reqSecret !== adminSecretKey) {
-        return {
-          statusCode: 401,
-          headers,
-          body: JSON.stringify({ error: 'Unauthorized: Invalid or missing x-admin-secret header.' })
         };
       }
 
@@ -202,36 +194,8 @@ export async function handler(event: any) {
     }
   }
 
-  // All privileged actions require server environment checks and x-admin-secret comparison
-  const { serviceRoleKey, adminSecretKey } = getServerConfig();
-  if (!serviceRoleKey) {
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: 'Campus Voices server is not configured: SUPABASE_SERVICE_ROLE_KEY missing.' })
-    };
-  }
-  if (!adminSecretKey) {
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: 'Campus Voices server is not configured: ADMIN_SECRET_KEY missing.' })
-    };
-  }
-
-  const incomingSecret =
-    event.headers['x-admin-secret'] ||
-    event.headers['X-Admin-Secret'] ||
-    payload.adminSecret ||
-    '';
-
-  if (!incomingSecret || incomingSecret !== adminSecretKey) {
-    return {
-      statusCode: 401,
-      headers,
-      body: JSON.stringify({ error: 'Unauthorized: Invalid or missing x-admin-secret header.' })
-    };
-  }
+  const authorization = await requireAdmin(event);
+  if (authorization.ok === false) return authError(authorization, headers);
 
   try {
     const supabaseAdmin = getAdminClient();

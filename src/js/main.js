@@ -1,10 +1,16 @@
 /**
  * MULens - Core Interactive Application & Auth System
- * Frontend Simulated Authentication with LocalStorage
+ * Supabase authentication (migration in progress)
  */
 
 import * as MULensData from '../data.ts';
 import { imageStoreDB } from './idb.js';
+import {
+  registerWithEmail,
+  loginWithEmail,
+  logoutFromSupabase,
+  getAuthenticatedUser
+} from './auth.js';
 import {
   initSupabase,
   fetchMemoriesFromSupabase,
@@ -129,7 +135,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       id: 'usr_admin',
       name: 'Shariar Adnan (Admin)',
       email: 'shariaradnan88@gmail.com',
-      password: 'adminpassword123',
       dept: 'University Media Director',
       role: 'Administrator',
       isAdmin: true,
@@ -141,7 +146,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       id: 'usr_alex',
       name: 'Alex Rivera',
       email: 'alex.rivera@university.edu',
-      password: 'password123',
       dept: "Media Arts '27",
       role: 'Student Photographer',
       isAdmin: false,
@@ -153,7 +157,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       id: 'usr_elena',
       name: 'Elena Rostova',
       email: 'elena.rostova@university.edu',
-      password: 'password123',
       dept: "Photojournalism '26",
       role: 'Senior Editorial Fellow',
       isAdmin: false,
@@ -165,7 +168,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       id: 'usr_fahmid',
       name: 'Fahmid Samin',
       email: 'fahim.rahman@demo.mulens.local',
-      password: 'Demo@1234',
       dept: 'CSE',
       role: 'Student',
       isAdmin: false,
@@ -177,7 +179,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       id: 'usr_masrura',
       name: 'Masrura Chowdhury',
       email: 'nusrat.jahan@demo.mulens.local',
-      password: 'Demo@1234',
       dept: 'EEE',
       role: 'Student',
       isAdmin: false,
@@ -189,7 +190,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       id: 'usr_tahsin',
       name: 'Tahsin Ahmed',
       email: 'tahsin.ahmed@demo.mulens.local',
-      password: 'Demo@1234',
       dept: 'BBA',
       role: 'Student',
       isAdmin: false,
@@ -201,7 +201,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       id: 'usr_sagor',
       name: 'Sagor Chowdhury',
       email: 'mehedi.hasan@demo.mulens.local',
-      password: 'Demo@1234',
       dept: 'English',
       role: 'Student',
       isAdmin: false,
@@ -222,15 +221,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         updated = true;
       }
     });
+    // Remove legacy plaintext passwords without deleting profile records.
+    storedUsersList.forEach(user => {
+      if (Object.prototype.hasOwnProperty.call(user, 'password')) {
+        delete user.password;
+        updated = true;
+      }
+    });
     if (updated) {
       localStorage.setItem('campuslens_users', JSON.stringify(storedUsersList));
     }
   }
 
-  // Ensure default active user is set to Admin (Shariar Adnan) if not logged in
-  if (!localStorage.getItem('campuslens_user')) {
-    localStorage.setItem('campuslens_user', JSON.stringify(defaultUsers[0]));
-  }
+  // No automatic demo login.
 
   // Sample initial favorites for Alex Rivera if not set
   if (!localStorage.getItem('campuslens_favorites_usr_alex')) {
@@ -282,15 +285,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Helper functions for state
   const getUsers = () => JSON.parse(localStorage.getItem('campuslens_users') || '[]');
-  const getCurrentUser = () => JSON.parse(localStorage.getItem('campuslens_user') || 'null');
+  let activeUser = null;
+  localStorage.removeItem('campuslens_user');
+  const getCurrentUser = () => activeUser;
 
-  const isAdminUser = (user) => {
-    if (!user) return false;
-    if (user.isAdmin === true) return true;
-    const email = (user.email || '').toLowerCase();
-    const role = (user.role || '').toLowerCase();
-    return email === 'shariaradnan88@gmail.com' || email.includes('admin') || role.includes('admin');
-  };
+  // Admin access is temporarily disabled until backend roles are implemented.
+  const isAdminUser = (_user) => false;
 
   const canDeleteMemory = (mem) => {
     if (!mem) return false;
@@ -298,7 +298,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!currentUser) return false;
 
     // Admin user can delete ANY memory
-    if (isAdminUser(currentUser) || currentUser.isAdmin === true) return true;
+    if (isAdminUser(currentUser)) return true;
 
     const currentName = (currentUser.name || '').toLowerCase();
     const currentId = String(currentUser.id || '');
@@ -430,14 +430,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderProfileTabs();
   }
 
-  const setCurrentUser = (user) => {
-    if (user) {
-      localStorage.setItem('campuslens_user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('campuslens_user');
+ 
+ const setCurrentUser = (user) => {
+  activeUser = user || null;
+  renderAuthState();
+};
+  // Secure Supabase Logout
+  const handleSecureLogout = async () => {
+    try {
+      await logoutFromSupabase();
+      sessionStorage.removeItem('mulens_admin_secret');
+
+      setCurrentUser(null);
+
+      showToast('You have logged out successfully.', 'success');
+      window.location.hash = '#home';
+
+    } catch (error) {
+      console.error('[Auth] Logout failed:', error);
+      showToast('Logout failed. Please try again.', 'danger');
     }
-    renderAuthState();
   };
+
 
   const getUserFavorites = (userId) => {
     if (!userId) return [];
@@ -940,19 +954,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Attach Logout listeners
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
-      logoutBtn.addEventListener('click', () => {
-        setCurrentUser(null);
-        showToast('You have logged out successfully.', 'info');
-      });
-    }
+  logoutBtn.addEventListener('click', handleSecureLogout);
+}
 
     const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
     if (mobileLogoutBtn) {
-      mobileLogoutBtn.addEventListener('click', () => {
-        setCurrentUser(null);
-        showToast('You have logged out successfully.', 'info');
-      });
-    }
+  mobileLogoutBtn.addEventListener('click', handleSecureLogout);
+}
 
     // Update Profile Modal details if rendered
     renderProfileTabs();
@@ -1102,7 +1110,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function openProfileMediaInLightbox(type) {
-    const currentUser = getCurrentUser() || defaultUsers[0];
+    const currentUser = getCurrentUser();
+    if (!currentUser) return;
     const isAvatar = type === 'avatar';
     const imgUrl = isAvatar 
       ? (currentUser.avatar || DEFAULT_PROFILE_AVATAR) 
@@ -1498,8 +1507,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       const newPass = document.getElementById('settingNewPass')?.value;
       const confirmPass = document.getElementById('settingConfirmPass')?.value;
 
-      if (newPass && newPass !== confirmPass) {
-        showToast('New passwords do not match!', 'danger');
+      // Do not save passwords locally. Real password change will be added via Supabase.
+      if (newPass || confirmPass) {
+        showToast('Password change is not available yet. Please leave these fields empty.', 'warning');
         return;
       }
 
@@ -1510,8 +1520,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         dept: newDept || currentUser.dept,
         avatar: newAvatar || currentUser.avatar,
         bio: newBio || currentUser.bio,
-        gear: newGear || currentUser.gear,
-        password: newPass ? newPass : currentUser.password
+        gear: newGear || currentUser.gear
       };
 
       // Update in users array & current user
@@ -1651,125 +1660,144 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // Login Form Submission
-  const loginForm = document.getElementById('login-form');
-  if (loginForm) {
-    loginForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const email = document.getElementById('loginEmail')?.value.trim();
-      const password = document.getElementById('loginPassword')?.value;
+  // Login Form Submission — Supabase Auth
+const loginForm = document.getElementById('login-form');
 
-      const users = getUsers();
-      const userMatch = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+if (loginForm) {
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-      if (userMatch) {
-        setCurrentUser(userMatch);
-        showToast(`Welcome back, ${userMatch.name}!`, 'success');
+    const email = document.getElementById('loginEmail')?.value.trim();
+    const password = document.getElementById('loginPassword')?.value;
+    const submitBtn = loginForm.querySelector('[type="submit"]');
 
-        const loginModalEl = document.getElementById('loginModal');
-        if (loginModalEl && typeof bootstrap !== 'undefined') {
-          const modal = bootstrap.Modal.getInstance(loginModalEl);
-          if (modal) modal.hide();
-        }
-        loginForm.reset();
-        checkPendingUploadAndOpenModal();
-      } else {
-        showToast('Invalid email or password. Try a quick demo account.', 'danger');
-      }
-    });
-  }
+    if (!email || !password) {
+      showToast('Please enter your email and password.', 'warning');
+      return;
+    }
 
-  // Demo Login 1-Click Buttons
-  document.querySelectorAll('.demo-login-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const email = btn.getAttribute('data-email');
-      const users = getUsers();
-      const userMatch = users.find(u => u.email === email);
+    if (submitBtn) submitBtn.disabled = true;
 
-      if (userMatch) {
-        setCurrentUser(userMatch);
-        showToast(`Signed in as ${userMatch.name} (${userMatch.role})`, 'success');
+    try {
+      const authUser = await loginWithEmail(email, password);
 
-        const loginModalEl = document.getElementById('loginModal');
-        if (loginModalEl && typeof bootstrap !== 'undefined') {
-          const modal = bootstrap.Modal.getInstance(loginModalEl);
-          if (modal) modal.hide();
-        }
-        checkPendingUploadAndOpenModal();
-      }
-    });
-  });
-
-  // Register Form Submission
-  const registerForm = document.getElementById('register-form');
-  if (registerForm) {
-    registerForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const name = (document.getElementById('regModalFullName')?.value || document.getElementById('regName')?.value || '').trim();
-      const studentId = (document.getElementById('regModalStudentId')?.value || '').trim();
-      const dept = (document.getElementById('regModalDept')?.value || document.getElementById('regDept')?.value || 'CSE').trim();
-      const email = (document.getElementById('regModalEmail')?.value || document.getElementById('regEmail')?.value || '').trim();
-      const password = document.getElementById('regModalPassword')?.value || document.getElementById('regPassword')?.value;
-      const confirmPassword = document.getElementById('regConfirmPassword')?.value;
-
-      if (confirmPassword && password !== confirmPassword) {
-        showToast('Passwords do not match. Please recheck.', 'danger');
-        return;
-      }
-
-      if (!name || !email || !password) {
-        showToast('Please complete all required fields.', 'warning');
-        return;
-      }
-
-      const users = getUsers();
-      if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
-        showToast('An account with this email already exists. Please sign in.', 'warning');
-        return;
-      }
-
-      const avatar = selectedRegistrationAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`;
-
-      const newUser = {
-        id: studentId || ('usr_' + Date.now()),
-        name,
-        email,
-        password,
-        dept: dept || "Campus Media",
+      // Temporary UI profile mapping.
+      // This is NOT trusted for backend authorization.
+      const profile = {
+        id: authUser.id,
+        name: authUser.user_metadata?.full_name || 'MULens Member',
+        email: authUser.email,
+        dept: authUser.user_metadata?.department || 'Campus Media',
+        studentId: authUser.user_metadata?.student_id || '',
+        batch: authUser.user_metadata?.batch || '',
+        avatar: authUser.user_metadata?.avatar_url || '',
         role: 'Student Creator',
-        avatar: avatar,
-        bio: `Member of ${dept} Dept. Campus media contributor.`,
-        gear: 'Digital SLR Camera'
+        isAdmin: false
       };
 
-      users.push(newUser);
-      localStorage.setItem('campuslens_users', JSON.stringify(users));
+      setCurrentUser(profile);
+      showToast(`Welcome back, ${profile.name}!`, 'success');
 
-      setCurrentUser(newUser);
-      showToast(`🎉 Account created! Welcome to CampusLens, ${newUser.name}!`, 'success');
+      const loginModalEl = document.getElementById('loginModal');
+
+      if (loginModalEl && typeof bootstrap !== 'undefined') {
+        bootstrap.Modal.getInstance(loginModalEl)?.hide();
+      }
+
+      loginForm.reset();
+      checkPendingUploadAndOpenModal();
+
+    } catch (error) {
+      console.error('[Auth] Login failed:', error);
+      showToast(
+        'Login failed. Check your credentials and email verification.',
+        'danger'
+      );
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  });
+}
+ // Disable legacy demo login buttons.
+document.querySelectorAll('.demo-login-btn').forEach(btn => {
+  btn.disabled = true;
+  btn.hidden = true;
+});
+  // Register Form Submission — Supabase Auth
+const registerForm = document.getElementById('register-form');
+
+if (registerForm) {
+  registerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const submitBtn = registerForm.querySelector('[type="submit"]');
+
+    const name = (document.getElementById('regModalFullName')?.value || document.getElementById('regName')?.value || '').trim();
+    const studentId = (document.getElementById('regModalStudentId')?.value || '').trim();
+    const dept = (document.getElementById('regModalDept')?.value || document.getElementById('regDept')?.value || 'CSE').trim();
+    const email = (document.getElementById('regModalEmail')?.value || document.getElementById('regEmail')?.value || '').trim();
+    const password = document.getElementById('regModalPassword')?.value || document.getElementById('regPassword')?.value;
+    const confirmPassword = document.getElementById('regConfirmPassword')?.value;
+
+    if (!name || !email || !password) {
+      showToast('Please complete all required fields.', 'warning');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      showToast('Passwords do not match.', 'danger');
+      return;
+    }
+
+    if (password.length < 8) {
+      showToast('Password must be at least 8 characters.', 'warning');
+      return;
+    }
+
+    if (submitBtn) submitBtn.disabled = true;
+
+    try {
+      const result = await registerWithEmail({
+        name,
+        studentId,
+        dept,
+        email,
+        password,
+        avatar: selectedRegistrationAvatar || ''
+      });
+
+      if (result.needsEmailConfirmation) {
+        showToast(
+          'Registration submitted! Check your email to verify your account.',
+          'success'
+        );
+      } else {
+        showToast('Registration successful!', 'success');
+      }
 
       const registerModalEl = document.getElementById('registerModal');
+
       if (registerModalEl && typeof bootstrap !== 'undefined') {
-        const modal = bootstrap.Modal.getInstance(registerModalEl) || new bootstrap.Modal(registerModalEl);
+        const modal = bootstrap.Modal.getInstance(registerModalEl);
         if (modal) modal.hide();
       }
-      registerForm.reset();
-      renderAuthState();
-      updateRealtimeStatsCounters();
-      checkPendingUploadAndOpenModal();
-    });
-  }
 
+      registerForm.reset();
+
+    } catch (error) {
+      console.error('[Auth] Registration failed:', error);
+      showToast(error.message || 'Registration failed.', 'danger');
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  });
+}
   // Forgot Password Form Submission
   const forgotPassForm = document.getElementById('forgot-password-form');
   if (forgotPassForm) {
     forgotPassForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const alertBox = document.getElementById('forgot-password-alert');
-      if (alertBox) {
-        alertBox.classList.remove('d-none');
-      }
-      showToast('Reset passcode dispatched to your email!', 'info');
+      showToast('Password recovery is not available yet.', 'warning');
     });
   }
 
@@ -4689,8 +4717,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (targetPageId === 'page-admin') {
-      const currentUser = getCurrentUser();
-      if (!isAdminUser(currentUser)) {
+      if (!isAdminUser(getCurrentUser())) {
         showToast('Access Denied: Admin Space is restricted to Administrator accounts.', 'danger');
         window.location.hash = '#home';
         pageViews.forEach(view => {
@@ -4700,6 +4727,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateNavbarActiveLinks('#home', 'page-home');
         return;
       }
+    }
+
+    // Private account pages require a verified active user.
+    if (['page-dashboard', 'page-profile', 'page-settings'].includes(targetPageId) && !getCurrentUser()) {
+      window.location.hash = '#login';
+      targetPageId = 'page-login';
     }
 
     pageViews.forEach(view => {
@@ -4740,7 +4773,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Dashboard View Renderer
   function renderDashboardView() {
-    const currentUser = getCurrentUser() || defaultUsers[0];
+    const currentUser = getCurrentUser();
+    if (!currentUser) return;
 
     const welcomeHeading = document.getElementById('dash-welcome-heading');
     const userName = document.getElementById('dash-user-name');
@@ -4865,7 +4899,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Profile View Renderer
   function renderProfileView() {
-    const currentUser = getCurrentUser() || defaultUsers[0];
+    const currentUser = getCurrentUser();
+    if (!currentUser) return;
 
     syncProfileMediaDOM(currentUser);
 
@@ -5035,7 +5070,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Populate Settings View
   function populateSettingsView() {
-    const currentUser = getCurrentUser() || defaultUsers[0];
+    const currentUser = getCurrentUser();
+    if (!currentUser) return;
 
     const fn = document.getElementById('settingFullName');
     const dept = document.getElementById('settingDeptRole');
@@ -5066,7 +5102,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (standaloneSettingsForm) {
     standaloneSettingsForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const currentUser = getCurrentUser() || defaultUsers[0];
+      const currentUser = getCurrentUser();
+      if (!currentUser) return;
 
       const fn = document.getElementById('settingFullName')?.value;
       const dept = document.getElementById('settingDeptRole')?.value;
@@ -5094,26 +5131,59 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Standalone Login Form (#page-login)
+ 
+  // Standalone Login Form — Supabase Auth
   const standaloneLoginForm = document.getElementById('standalone-login-form');
+
   if (standaloneLoginForm) {
-    standaloneLoginForm.addEventListener('submit', (e) => {
+    standaloneLoginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+
       const email = document.getElementById('pageLoginEmail')?.value.trim();
       const password = document.getElementById('pageLoginPassword')?.value;
+      const submitBtn = standaloneLoginForm.querySelector('[type="submit"]');
 
-      const users = getUsers();
-      const match = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+      if (!email || !password) {
+        showToast('Please enter your email and password.', 'warning');
+        return;
+      }
 
-      if (match) {
-        setCurrentUser(match);
-        showToast(`Welcome back, ${match.name}!`, 'success');
+      if (submitBtn) submitBtn.disabled = true;
+
+      try {
+        const authUser = await loginWithEmail(email, password);
+
+        // Temporary display profile, NOT a trusted admin role.
+        const profile = {
+          id: authUser.id,
+          name: authUser.user_metadata?.full_name || 'MULens Member',
+          email: authUser.email,
+          dept: authUser.user_metadata?.department || 'Campus Media',
+          studentId: authUser.user_metadata?.student_id || '',
+          batch: authUser.user_metadata?.batch || '',
+          avatar: authUser.user_metadata?.avatar_url || '',
+          role: 'Student Creator',
+          isAdmin: false
+        };
+
+        setCurrentUser(profile);
+        showToast(`Welcome back, ${profile.name}!`, 'success');
+
+        standaloneLoginForm.reset();
         window.location.hash = '#dashboard';
-      } else {
-        showToast('Invalid credentials. Please check your email and password.', 'danger');
+
+      } catch (error) {
+        console.error('[Auth] Standalone login failed:', error);
+        showToast(
+          'Login failed. Check your credentials and email verification.',
+          'danger'
+        );
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
       }
     });
   }
+
 
   // Standalone Register Avatar Preview
   const regAvatarInput = document.getElementById('regAvatarUrl');
@@ -5135,59 +5205,73 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // Standalone Register Form Submission (#page-register)
+
+  // Standalone Register Form — Supabase Authentication
   const standaloneRegForm = document.getElementById('standalone-register-form');
+
   if (standaloneRegForm) {
-    standaloneRegForm.addEventListener('submit', (e) => {
+    standaloneRegForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+
       const name = document.getElementById('regFullName')?.value.trim();
       const studentId = document.getElementById('regStudentId')?.value.trim();
       const dept = document.getElementById('regDepartment')?.value.trim();
       const batch = document.getElementById('regBatch')?.value.trim();
       const email = document.getElementById('regEmailAddress')?.value.trim();
-      const pass = document.getElementById('regPasswordVal')?.value;
+      const password = document.getElementById('regPasswordVal')?.value;
       const confirmPass = document.getElementById('regConfirmPasswordVal')?.value;
-      const avatar = document.getElementById('regAvatarUrl')?.value || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=300';
+      const avatar = document.getElementById('regAvatarUrl')?.value || '';
 
-      if (pass !== confirmPass) {
-        showToast('Passwords do not match. Please recheck.', 'danger');
+      if (!name || !email || !password) {
+        showToast('Please complete all required fields.', 'warning');
         return;
       }
 
-      const users = getUsers();
-      if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
-        showToast('An account with this email already exists.', 'warning');
+      if (password !== confirmPass) {
+        showToast('Passwords do not match.', 'danger');
         return;
       }
 
-      const newUser = {
-        id: studentId || ('usr_' + Date.now()),
-        name,
-        email,
-        password: pass,
-        dept: dept || "Media Arts",
-        role: 'Student Creator',
-        avatar,
-        bio: `Member of ${batch || 'Class of 2026'}. Campus photojournalism contributor.`,
-        gear: 'Digital SLR Camera'
-      };
+      if (password.length < 8) {
+        showToast('Password must be at least 8 characters.', 'warning');
+        return;
+      }
 
-      users.push(newUser);
-      localStorage.setItem('campuslens_users', JSON.stringify(users));
+      const submitBtn = standaloneRegForm.querySelector('[type="submit"]');
+      if (submitBtn) submitBtn.disabled = true;
 
-      // Show Bootstrap Success Modal
-      const regSuccessModalEl = document.getElementById('regSuccessModal');
-      if (regSuccessModalEl && typeof bootstrap !== 'undefined') {
-        const modal = new bootstrap.Modal(regSuccessModalEl);
-        modal.show();
-      } else {
-        showToast('Account registered successfully! Please sign in.', 'success');
+      try {
+        const result = await registerWithEmail({
+          name,
+          studentId,
+          dept,
+          batch,
+          email,
+          password,
+          avatar
+        });
+
+        if (result.needsEmailConfirmation) {
+          showToast('Account created! Check your email to verify your account.', 'success');
+        } else {
+          showToast('Registration successful!', 'success');
+        }
+
+        standaloneRegForm.reset();
+
+        // Direct the user to sign in after confirming their email.
         window.location.hash = '#login';
+
+      } catch (error) {
+        console.error('[Auth] Standalone registration failed:', error);
+        showToast(error.message || 'Registration failed.', 'danger');
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
       }
     });
   }
 
-  // Registration Success Modal Login Button
+     // Registration Success Modal Login Button
   const regSuccessLoginBtn = document.getElementById('reg-success-login-btn');
   if (regSuccessLoginBtn) {
     regSuccessLoginBtn.addEventListener('click', () => {
@@ -5200,21 +5284,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (standaloneForgotForm) {
     standaloneForgotForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const alertBox = document.getElementById('forgot-pass-alert-box');
-      if (alertBox) alertBox.classList.remove('d-none');
-      showToast('Password reset passcode sent to your email!', 'info');
+      showToast('Password recovery is not available yet.', 'warning');
     });
   }
 
   // Dashboard Sidebar Logout Button
   const dashLogoutBtn = document.getElementById('dash-logout-btn');
   if (dashLogoutBtn) {
-    dashLogoutBtn.addEventListener('click', () => {
-      setCurrentUser(null);
-      showToast('You have logged out.', 'info');
-      window.location.hash = '#home';
-    });
-  }
+  dashLogoutBtn.addEventListener('click', handleSecureLogout);
+}
 
   // Global window functions
   window.sharePOTW = function() {
@@ -6605,6 +6683,32 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Run initial Auth State rendering, submit trigger binding & Routing on load
+    // Restore authenticated user from Supabase.
+  try {
+    const authUser = await getAuthenticatedUser();
+
+    if (authUser && authUser.email_confirmed_at) {
+      activeUser = {
+        id: authUser.id,
+        name: authUser.user_metadata?.full_name || 'MULens Member',
+        email: authUser.email,
+        dept: authUser.user_metadata?.department || 'Campus Media',
+        studentId: authUser.user_metadata?.student_id || '',
+        batch: authUser.user_metadata?.batch || '',
+        avatar: authUser.user_metadata?.avatar_url || '',
+        role: 'Student Creator',
+        isAdmin: false
+      };
+
+      console.log('[Auth] Supabase session restored.');
+    } else {
+      activeUser = null;
+    }
+
+  } catch (error) {
+    activeUser = null;
+    console.log('[Auth] No verified session available.');
+  }
   renderAuthState();
   bindSubmitMemoriesTriggers();
   bindAdminEventListeners();

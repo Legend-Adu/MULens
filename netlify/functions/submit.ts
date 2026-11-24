@@ -1,12 +1,13 @@
+import { verifyIdentity, authError } from '../lib/authorization.js';
 // netlify/functions/submit.ts - Serverless handler for memory submissions
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://ggblwkqprciadgdxibip.supabase.co';
 // Strictly require SUPABASE_SERVICE_ROLE_KEY from server environment ONLY - never fall back to publishable key
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const BUCKET_NAME = 'mulens-media';
 
 function getAdminClient() {
+  const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://ggblwkqprciadgdxibip.supabase.co';
+  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
   if (!SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error('SUPABASE_SERVICE_ROLE_KEY is not configured on the server.');
   }
@@ -31,6 +32,9 @@ export async function handler(event: any) {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
   }
 
+  const identity = await verifyIdentity(event);
+  if (identity.ok === false) return authError(identity, headers);
+
   try {
     const supabaseAdmin = getAdminClient();
     const memoryData = JSON.parse(event.body || '{}');
@@ -40,6 +44,12 @@ export async function handler(event: any) {
     }
 
     const memId = memoryData.id || `mem_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    if (typeof memId !== 'string' || !/^[A-Za-z0-9_-]{1,100}$/.test(memId)) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid memory ID.' }) };
+    }
+    const { data: existing, error: lookupError } = await supabaseAdmin.from('memories').select('id').eq('id', memId).maybeSingle();
+    if (lookupError) return { statusCode: 503, headers, body: JSON.stringify({ error: 'Unable to check memory ID.' }) };
+    if (existing) return { statusCode: 409, headers, body: JSON.stringify({ error: 'Memory ID already exists.' }) };
     const sourceImages = Array.isArray(memoryData.albumImages) && memoryData.albumImages.length > 0
       ? memoryData.albumImages
       : [memoryData.imageUrl];
@@ -54,9 +64,10 @@ export async function handler(event: any) {
         albumUrls.push(src);
       } else if (typeof src === 'string' && src.startsWith('data:')) {
         try {
-          const matches = src.match(/^data:(image\/[a-zA-Z0-9+\-]+);base64,(.+)$/);
-          const mimeType = matches ? matches[1] : 'image/jpeg';
-          const base64Data = matches ? matches[2] : src.split(',')[1];
+          const matches = src.match(/^data:(image\/(?:jpeg|png|webp|gif|avif));base64,([A-Za-z0-9+/=]+)$/i);
+          if (!matches) continue;
+          const mimeType = matches[1].toLowerCase();
+          const base64Data = matches[2];
           const ext = mimeType.split('/')[1] || 'jpg';
           const buffer = Buffer.from(base64Data, 'base64');
 
@@ -66,7 +77,7 @@ export async function handler(event: any) {
             .upload(filePath, buffer, {
               contentType: mimeType,
               cacheControl: '360000',
-              upsert: true
+              upsert: false
             });
 
           if (!uploadErr) {
@@ -81,7 +92,8 @@ export async function handler(event: any) {
       }
     }
 
-    const mainImageUrl = albumUrls[0] || memoryData.imageUrl || '';
+    if (!albumUrls.length) return { statusCode: 400, headers, body: JSON.stringify({ error: 'No valid photos were uploaded.' }) };
+    const mainImageUrl = albumUrls[0];
     const albumImagesFinal = albumUrls.length > 0 ? albumUrls : [mainImageUrl];
 
     // Enforce pending status and server timestamp on new submissions
@@ -97,9 +109,9 @@ export async function handler(event: any) {
       badge_icon: memoryData.badgeIcon || 'bi-images',
       location: memoryData.location || 'Main Campus',
       date: memoryData.date || 'Recent',
-      author: memoryData.author || {},
-      owner_id: memoryData.ownerId || memoryData.userId || null,
-      user_id: memoryData.userId || memoryData.ownerId || null,
+      author: { id: identity.user.id, name: identity.user.name, role: 'Student Creator', avatarUrl: identity.user.avatar },
+      owner_id: identity.user.id,
+      user_id: identity.user.id,
       tags: Array.isArray(memoryData.tags) ? memoryData.tags : [],
       likes_count: 1,
       aspect_ratio: memoryData.aspectRatio || null,
@@ -111,7 +123,7 @@ export async function handler(event: any) {
 
     const { error: insertErr } = await supabaseAdmin
       .from('memories')
-      .upsert(dbPayload, { onConflict: 'id' });
+      .insert(dbPayload);
 
     if (insertErr) {
       return { statusCode: 500, headers, body: JSON.stringify({ error: insertErr.message }) };
@@ -124,6 +136,9 @@ export async function handler(event: any) {
         success: true,
         memory: {
           ...memoryData,
+          ownerId: identity.user.id,
+          userId: identity.user.id,
+          author: dbPayload.author,
           id: String(memId),
           imageUrl: mainImageUrl,
           albumImages: albumImagesFinal,

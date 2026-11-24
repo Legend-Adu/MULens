@@ -8,6 +8,7 @@ import { createServer as createViteServer } from 'vite';
 dotenv.config();
 
 // Import netlify function handlers for exact parity
+import { handler as authStatusHandler } from './netlify/functions/auth-status.js';
 import { handler as migrateHandler } from './netlify/functions/migrate.js';
 import { handler as submitHandler } from './netlify/functions/submit.js';
 import { handler as adminActionHandler } from './netlify/functions/admin-action.js';
@@ -50,6 +51,7 @@ async function startServer() {
   });
 
   // API Routes mapped to Netlify function logic
+  app.all('/api/auth-status', (req, res) => runNetlifyFunction(authStatusHandler, req, res));
   app.all('/api/migrate', (req, res) => runNetlifyFunction(migrateHandler, req, res));
   app.all('/api/submit', (req, res) => runNetlifyFunction(submitHandler, req, res));
   app.all('/api/admin-action', (req, res) => runNetlifyFunction(adminActionHandler, req, res));
